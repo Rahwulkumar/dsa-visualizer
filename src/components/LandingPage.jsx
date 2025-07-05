@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { motion, useAnimation } from 'framer-motion';
+import { useAnimation } from 'framer-motion';
 import { Canvas } from '@react-three/fiber';
 import { Stars, OrbitControls } from '@react-three/drei';
 import SpaceBackground from './3d/SpaceBackground';
@@ -9,7 +9,7 @@ import NavigationHeader from './ui/NavigationHeader';
 import HeroSection from './ui/HeroSection';
 import FeatureShowcase from './ui/FeatureShowcase';
 import FooterSection from './ui/FooterSection';
-import { theme } from '../theme';
+// import { theme } from '../theme';
 
 const LandingPage = () => {
   const canvasRef = useRef();

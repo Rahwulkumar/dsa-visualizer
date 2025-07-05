@@ -126,108 +126,198 @@ const DSAModulesGrid = () => {
   ];
 
   return (
-    <section id="modules" className="py-20 px-4 sm:px-6 lg:px-8">
+    <section id="modules" className="pt-8 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        {/* Section Header */}
+        {/* Main Title - Now at the top */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: -50 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-16"
+          transition={{ duration: 1, ease: "easeOut" }}
+          className="text-center mb-4"
         >
-          <h2 className="text-4xl md:text-5xl font-bold font-display text-white mb-6">
+          <h2 className="text-5xl md:text-6xl font-bold font-display text-white mb-4">
             <span className="bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
               Data Structure
             </span>
             <br />
             <span className="text-white">Cosmos</span>
           </h2>
+        </motion.div>
+
+        {/* Subtitle - Appears after title */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+          className="text-center mb-16"
+        >
           <p className="text-xl text-white/70 max-w-3xl mx-auto leading-relaxed">
             Each module is a planet in our DSA universe. Click to explore the inner workings 
             of algorithms and their impact on memory and performance.
           </p>
         </motion.div>
 
-        {/* Modules Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {modules.map((module, index) => (
-            <motion.div
-              key={module.id}
-              initial={{ opacity: 0, y: 50 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              whileHover={{ 
-                scale: 1.05,
-                rotateY: 5,
-                boxShadow: `0 20px 40px ${module.glowColor.replace('shadow-', 'rgba(').replace('/25', ', 0.3)')}` 
-              }}
-              onClick={() => handleModuleClick(module.id)}
-              className="relative group cursor-pointer"
-            >
-              <div className="relative p-6 bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl hover:border-white/20 transition-all duration-500 overflow-hidden">
-                {/* Background gradient */}
-                <div className={`absolute inset-0 bg-gradient-to-br ${module.color} opacity-5 group-hover:opacity-10 transition-opacity duration-500`} />
-                
-                {/* Module Icon */}
-                <div className="text-4xl mb-4 relative z-10">
-                  {module.icon}
-                </div>
-                
-                {/* Module Title */}
-                <h3 className="text-xl font-bold text-white mb-2 relative z-10">
-                  {module.title}
-                </h3>
-                
-                {/* Description */}
-                <p className="text-white/70 text-sm mb-4 relative z-10 leading-relaxed">
-                  {module.description}
-                </p>
-                
-                {/* Operations */}
-                <div className="flex flex-wrap gap-2 mb-4 relative z-10">
-                  {module.operations.map((op) => (
-                    <span
-                      key={op}
-                      className="text-xs px-2 py-1 bg-white/10 rounded-full text-white/80 backdrop-blur-sm"
-                    >
-                      {op}
-                    </span>
-                  ))}
-                </div>
-                
-                {/* Complexity */}
-                <div className="flex items-center justify-between relative z-10">
-                  <span className="text-xs text-white/60">Complexity:</span>
-                  <span className="text-xs font-mono text-cyan-400">{module.complexity}</span>
-                </div>
-
-                {/* Hover Effect */}
-                <div className="absolute inset-0 border-2 border-transparent group-hover:border-white/20 rounded-2xl transition-all duration-500" />
-                
-                {/* Glow effect */}
-                <div className="absolute inset-0 rounded-2xl group-hover:shadow-2xl transition-shadow duration-500" />
-              </div>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Call to Action */}
+        {/* Modules Grid - Staggered animation */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="text-center mt-16"
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
+          {modules.map((module, index) => {
+            // Calculate row and column for more complex animations
+            const row = Math.floor(index / 3);
+            const col = index % 3;
+            
+            return (
+              <motion.div
+                key={module.id}
+                initial={{ 
+                  opacity: 0, 
+                  y: 60 + (row * 20), 
+                  x: (col - 1) * 30,
+                  scale: 0.9,
+                  rotateY: -15
+                }}
+                whileInView={{ 
+                  opacity: 1, 
+                  y: 0, 
+                  x: 0,
+                  scale: 1,
+                  rotateY: 0
+                }}
+                viewport={{ once: true }}
+                transition={{ 
+                  duration: 0.8, 
+                  delay: 0.8 + (index * 0.15),
+                  ease: "easeOut"
+                }}
+                whileHover={{ 
+                  scale: 1.05,
+                  rotateY: 5,
+                  rotateX: 5,
+                  boxShadow: `0 25px 50px ${module.glowColor.replace('shadow-', 'rgba(').replace('/25', ', 0.4)')}`,
+                  transition: { duration: 0.3 }
+                }}
+                onClick={() => handleModuleClick(module.id)}
+                className="relative group cursor-pointer"
+              >
+                <div className="relative p-6 bg-black/40 backdrop-blur-md border border-white/10 rounded-2xl hover:border-white/20 transition-all duration-500 overflow-hidden">
+                  {/* Background gradient */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${module.color} opacity-5 group-hover:opacity-10 transition-opacity duration-500`} />
+                  
+                  {/* Module Icon */}
+                  <motion.div 
+                    initial={{ scale: 0, rotate: -180 }}
+                    whileInView={{ scale: 1, rotate: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.6, delay: 1 + (index * 0.15) }}
+                    className="text-4xl mb-4 relative z-10"
+                  >
+                    {module.icon}
+                  </motion.div>
+                  
+                  {/* Module Title */}
+                  <motion.h3 
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 1.2 + (index * 0.15) }}
+                    className="text-xl font-bold text-white mb-2 relative z-10"
+                  >
+                    {module.title}
+                  </motion.h3>
+                  
+                  {/* Description */}
+                  <motion.p 
+                    initial={{ opacity: 0, x: -20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 1.4 + (index * 0.15) }}
+                    className="text-white/70 text-sm mb-4 relative z-10 leading-relaxed"
+                  >
+                    {module.description}
+                  </motion.p>
+                  
+                  {/* Operations */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 1.6 + (index * 0.15) }}
+                    className="flex flex-wrap gap-2 mb-4 relative z-10"
+                  >
+                    {module.operations.map((op, opIndex) => (
+                      <motion.span
+                        key={op}
+                        initial={{ opacity: 0, scale: 0 }}
+                        whileInView={{ opacity: 1, scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.3, delay: 1.8 + (index * 0.15) + (opIndex * 0.1) }}
+                        className="text-xs px-2 py-1 bg-white/10 rounded-full text-white/80 backdrop-blur-sm"
+                      >
+                        {op}
+                      </motion.span>
+                    ))}
+                  </motion.div>
+                  
+                  {/* Complexity */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: 2 + (index * 0.15) }}
+                    className="flex items-center justify-between relative z-10"
+                  >
+                    <span className="text-xs text-white/60">Complexity:</span>
+                    <span className="text-xs font-mono text-cyan-400">{module.complexity}</span>
+                  </motion.div>
+
+                  {/* Hover Effect */}
+                  <div className="absolute inset-0 border-2 border-transparent group-hover:border-white/20 rounded-2xl transition-all duration-500" />
+                  
+                  {/* Glow effect */}
+                  <div className="absolute inset-0 rounded-2xl group-hover:shadow-2xl transition-shadow duration-500" />
+                </div>
+              </motion.div>
+            );
+          })}
+        </motion.div>
+
+        {/* Call to Action - Final element with delayed animation */}
+        <motion.div
+          initial={{ opacity: 0, y: 50, scale: 0.8 }}
+          whileInView={{ opacity: 1, y: 0, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 2.5, ease: "easeOut" }}
+          className="text-center mt-20"
         >
           <motion.button
-            whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(0, 212, 255, 0.5)" }}
+            initial={{ boxShadow: "0 0 0px rgba(0, 212, 255, 0)" }}
+            whileHover={{ 
+              scale: 1.05, 
+              boxShadow: "0 0 30px rgba(0, 212, 255, 0.5)",
+              transition: { duration: 0.3 }
+            }}
             whileTap={{ scale: 0.95 }}
             className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg hover:from-cyan-400 hover:to-blue-500 transition-all duration-300"
           >
-            Explore All Modules
+            🚀 Explore All Modules
           </motion.button>
+          
+          {/* Additional animated text */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 3 }}
+            className="text-white/60 text-sm mt-4"
+          >
+            Begin your journey through the algorithmic universe
+          </motion.p>
         </motion.div>
       </div>
     </section>
