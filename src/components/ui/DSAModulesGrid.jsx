@@ -7,10 +7,14 @@ const DSAModulesGrid = () => {
   const navigate = useNavigate();
 
   const handleModuleClick = (moduleId) => {
-    // For now, just log the module ID
-    // In the future, this will navigate to /modules/${moduleId}
-    console.log(`Navigating to ${moduleId} module`);
-    // navigate(`/modules/${moduleId}`);
+    // Navigate to specific module pages
+    if (moduleId === 'arrays') {
+      navigate('/array-info');
+    } else {
+      // For other modules, just log for now
+      console.log(`Navigating to ${moduleId} module`);
+      // navigate(`/modules/${moduleId}`);
+    }
   };
   const modules = [
     {
