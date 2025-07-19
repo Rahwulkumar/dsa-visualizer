@@ -16,11 +16,22 @@ const HeroSection = () => {
           transition={{ duration: 1, ease: "easeOut" }}
           className="space-y-8"
         >
+          {/* Badge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+            className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-cyan-500/20 to-blue-600/20 border border-cyan-500/30 text-cyan-400 text-sm font-medium backdrop-blur-sm"
+          >
+            <span className="w-2 h-2 bg-cyan-400 rounded-full mr-2 animate-pulse"></span>
+            Explore the Universe of Data Structures
+          </motion.div>
+
           {/* Main Title */}
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.4 }}
             className="text-4xl md:text-6xl lg:text-7xl font-bold font-display text-white leading-tight"
           >
             <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
@@ -36,7 +47,7 @@ const HeroSection = () => {
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.6 }}
             className="text-xl md:text-2xl text-white/80 max-w-4xl mx-auto leading-relaxed"
           >
             Journey through the cosmos of algorithms and data structures. 
@@ -48,7 +59,7 @@ const HeroSection = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
+            transition={{ delay: 0.8 }}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-12"
           >
             <motion.button
