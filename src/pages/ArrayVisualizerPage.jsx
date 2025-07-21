@@ -19,6 +19,11 @@ import {
   Menu,
   X
 } from 'lucide-react';
+import { Canvas } from '@react-three/fiber';
+import { Stars, OrbitControls } from '@react-three/drei';
+import SpaceBackground from '../components/3d/SpaceBackground';
+import AsteroidField from '../components/3d/AsteroidField';
+import FloatingParticles from '../components/3d/FloatingParticles';
 
 const ArrayVisualizerPage = () => {
   const navigate = useNavigate();
@@ -35,7 +40,6 @@ const ArrayVisualizerPage = () => {
   // Enhanced UI state
   const [codeLanguage, setCodeLanguage] = useState('python'); // python, java, c
   const [controlsVisible, setControlsVisible] = useState(true);
-  const [liveCommentary, setLiveCommentary] = useState(['Array visualization ready']);
   
   // Enhanced animation state tracking with visual movement
   const [currentElementIndex, setCurrentElementIndex] = useState(-1);
@@ -62,7 +66,6 @@ const ArrayVisualizerPage = () => {
   // Animation control and memory
   const animationRef = useRef(null);
   const baseMemoryAddress = 0x2000;
-  const commentaryRef = useRef(null);
   
   // Tooltip state
   const [tooltip, setTooltip] = useState({ show: false, content: '', x: 0, y: 0 });
@@ -71,6 +74,11 @@ const ArrayVisualizerPage = () => {
   useEffect(() => {
     generateNewArray();
   }, [arraySize]);
+
+  // Ensure page starts at top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Generate array with user-specified size
   const generateNewArray = () => {
@@ -81,22 +89,6 @@ const ArrayVisualizerPage = () => {
     setDisplayArray([...newArray]);
     setMemoryArray([...newArray]);
     resetAnimation();
-    addCommentary(`Generated new array of size ${arraySize}: [${newArray.join(', ')}]`);
-  };
-
-  // Enhanced commentary system
-  const addCommentary = (message) => {
-    setLiveCommentary(prev => {
-      const newCommentary = [...prev, `${new Date().toLocaleTimeString()}: ${message}`];
-      return newCommentary.slice(-10); // Keep last 10 messages
-    });
-    
-    // Auto-scroll commentary
-    setTimeout(() => {
-      if (commentaryRef.current) {
-        commentaryRef.current.scrollTop = commentaryRef.current.scrollHeight;
-      }
-    }, 100);
   };
 
   // Multi-language code templates with enhanced detail
@@ -256,7 +248,6 @@ const ArrayVisualizerPage = () => {
     setFoundIndex(-1);
     setDisplayArray([...originalArray]);
     setMemoryArray([...originalArray]);
-    addCommentary('Animation reset to initial state');
     if (animationRef.current) {
       clearTimeout(animationRef.current);
     }
@@ -611,6 +602,43 @@ const ArrayVisualizerPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-space-deep to-space-dark">
+      {/* 3D Space Background */}
+      <div className="fixed inset-0 z-0">
+        <Canvas
+          camera={{ position: [0, 0, 5], fov: 75 }}
+          style={{ background: 'radial-gradient(circle at 30% 20%, #0a0a0f 0%, #000000 100%)' }}
+        >
+          <ambientLight intensity={0.1} />
+          <pointLight position={[10, 10, 10]} intensity={0.5} />
+          
+          {/* Starfield background */}
+          <Stars 
+            radius={400} 
+            depth={60} 
+            count={3000} 
+            factor={3} 
+            saturation={0} 
+            fade={true}
+            speed={0.3}
+          />
+          
+          {/* Custom space elements */}
+          <SpaceBackground />
+          <AsteroidField />
+          <FloatingParticles />
+          
+          <OrbitControls
+            enableZoom={false}
+            enablePan={false}
+            enableRotate={true}
+            autoRotate={true}
+            autoRotateSpeed={0.2}
+            maxPolarAngle={Math.PI / 2}
+            minPolarAngle={Math.PI / 2}
+          />
+        </Canvas>
+      </div>
+
       {/* Tooltip */}
       <AnimatePresence>
         {tooltip.show && (
@@ -659,7 +687,7 @@ const ArrayVisualizerPage = () => {
               onMouseEnter={(e) => showTooltip('Choose the size of your array (3-12 elements)', e)}
               onMouseLeave={hideTooltip}
             >
-              {[3,4,5,6,7,8,9,10,11,12].map(size => (
+              {[3,4,5,6,7].map(size => (
                 <option key={size} value={size}>{size} elements</option>
               ))}
             </select>
@@ -677,123 +705,191 @@ const ArrayVisualizerPage = () => {
         </div>
       </div>
 
-      {/* Enhanced Three-Panel Layout */}
-      <div className="relative z-10 px-6 pb-6">
-        <div className="max-w-7xl mx-auto space-y-6">
+      {/* Enhanced Layout - Operation Controls at Top, Three Panels Below */}
+      <div className="relative z-10 px-4 pb-4">
+        <div className="max-w-7xl mx-auto space-y-4">
           
-          {/* TOP ROW: Array Visualization + Code & Commentary */}
-          <div className="grid lg:grid-cols-2 gap-6" style={{ minHeight: '50vh' }}>
-            
-            {/* PANEL A: Array Visualization (Top-Left) */}
-            <div className="glass-card p-8">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-bold text-white mb-2">Array Canvas</h2>
-                <div className="flex items-center justify-center gap-2 text-cyan-400 text-sm">
-                  <Activity className="w-4 h-4" />
-                  <span>{animationStep || 'Ready for operation'}</span>
-                  {loopIteration > 0 && <span className="ml-2 bg-cyan-500/20 px-2 py-1 rounded">Loop: {loopIteration}</span>}
-                </div>
-              </div>
+          {/* TOP SECTION: Operation Controls (Panel A) */}
+          <div className="glass-card p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <Settings className="w-4 h-4 text-cyan-400" />
+                Operation Controls
+              </h3>
               
-              {/* Enhanced Array with Visual Movement */}
-              <div className="flex items-center justify-center flex-1 py-8">
-                <div className="relative">
-                  
-                  {/* Visual Cursor for Search Operations */}
-                  {cursorPosition >= 0 && operation === 'search' && (
-                    <motion.div
-                      className="absolute -top-8 w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center shadow-lg"
-                      animate={{ 
-                        x: cursorPosition * 88, // 80px width + 8px gap
-                      }}
-                      transition={{ 
-                        type: "spring", 
-                        stiffness: 400, 
-                        damping: 30 
-                      }}
-                    >
-                      <Search className="w-3 h-3 text-white" />
-                    </motion.div>
-                  )}
-                  
-                  {/* Array Elements with TRUE Visual Movement */}
-                  <div className="flex gap-2">
-                    <AnimatePresence mode="popLayout">
-                      {displayArray.map((value, index) => (
-                        <motion.div
-                          key={`element-${index}-${value}`}
-                          layout
-                          initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                          animate={{ 
-                            opacity: elementStates[index] === 'deleting' ? 0.3 : 1,
-                            scale: currentElementIndex === index ? 1.1 : 1,
-                            y: 0,
-                            x: shiftingElements[index] ? (index < parseInt(insertIndex || deleteIndex || 0) ? 88 : -88) : 0,
-                          }}
-                          exit={{ opacity: 0, scale: 0.8, y: -20 }}
-                          transition={{ 
-                            duration: 0.8,
-                            type: "spring",
-                            stiffness: 300,
-                            damping: 25,
-                            layout: { duration: 1.0 } // Smooth sliding for insert/delete
-                          }}
-                          className="relative flex flex-col items-center"
-                          onMouseEnter={(e) => showTooltip(`Value: ${value}, Index: ${index}, Memory: 0x${(baseMemoryAddress + index * 4).toString(16).toUpperCase()}`, e)}
-                          onMouseLeave={hideTooltip}
-                        >
-                          {/* Index label */}
-                          <div className="text-white/60 text-xs font-mono mb-2">[{index}]</div>
-                          
-                          {/* Element box with enhanced animations */}
-                          <motion.div
-                            animate={{
-                              scale: currentElementIndex === index ? 1.15 : 1,
-                              rotateY: currentElementIndex === index ? [0, 5, -5, 0] : 0,
-                              rotateX: shiftingElements[index] ? [0, 10, 0] : 0,
-                            }}
-                            transition={{ duration: 0.3 }}
-                            className={`
-                              w-20 h-20 rounded-xl flex items-center justify-center text-white font-bold text-lg
-                              transition-all duration-500 border-2 cursor-pointer
-                              ${getElementStyle(index)}
-                            `}
-                          >
-                            {value}
-                          </motion.div>
-                          
-                          {/* Memory address label */}
-                          <div className="text-white/40 text-xs font-mono mt-2">
-                            0x{(baseMemoryAddress + index * 4).toString(16).toUpperCase()}
-                          </div>
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Status display */}
-              <div className="text-center mt-6">
-                {foundIndex !== -1 && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="inline-flex items-center gap-2 bg-green-500/20 text-green-400 px-4 py-2 rounded-lg border border-green-500/30"
-                  >
-                    <Search className="w-4 h-4" />
-                    <span className="font-semibold">Element found at index {foundIndex}!</span>
-                  </motion.div>
-                )}
-              </div>
+              {/* Controls Toggle Button */}
+              <motion.button
+                onClick={() => setControlsVisible(!controlsVisible)}
+                className="bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-lg transition-all"
+                animate={{ rotate: controlsVisible ? 0 : 180 }}
+                onMouseEnter={(e) => showTooltip('Toggle controls panel', e)}
+                onMouseLeave={hideTooltip}
+              >
+                {controlsVisible ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              </motion.button>
             </div>
             
-            {/* PANEL B: Code Execution & Live Commentary (Top-Right) */}
-            <div className="glass-card p-6 space-y-6">
+            {/* Collapsible Controls Content */}
+            <AnimatePresence>
+              {controlsVisible && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                  className="overflow-hidden"
+                >
+                  <div className="grid lg:grid-cols-4 gap-4">
+                    {/* Operation Selection */}
+                    <div>
+                      <label className="block text-white/70 text-xs font-medium mb-1">Choose Operation</label>
+                      <div className="relative">
+                        <select
+                          value={operation}
+                          onChange={(e) => setOperation(e.target.value)}
+                          disabled={isAnimating}
+                          className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm appearance-none pr-8"
+                          onMouseEnter={(e) => showTooltip('Select array operation to visualize', e)}
+                          onMouseLeave={hideTooltip}
+                        >
+                          <option value="search">🔍 Search (O(n))</option>
+                          <option value="access">⚡ Access (O(1))</option>
+                          <option value="insert">➕ Insert (O(n))</option>
+                          <option value="delete">❌ Delete (O(n))</option>
+                        </select>
+                        <ChevronDown className="absolute right-2 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                      </div>
+                    </div>
+                    
+                    {/* Operation-specific inputs */}
+                    <div>
+                      {operation === 'access' && (
+                        <>
+                          <label className="block text-white/70 text-xs font-medium mb-1">Index to Access</label>
+                          <input
+                            type="number"
+                            value={accessIndex}
+                            onChange={(e) => setAccessIndex(e.target.value)}
+                            disabled={isAnimating}
+                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm"
+                            placeholder={`0 to ${displayArray.length - 1}`}
+                            min="0"
+                            max={displayArray.length - 1}
+                          />
+                        </>
+                      )}
+                      
+                      {operation === 'search' && (
+                        <>
+                          <label className="block text-white/70 text-xs font-medium mb-1">Value to Find</label>
+                          <input
+                            type="number"
+                            value={searchValue}
+                            onChange={(e) => setSearchValue(e.target.value)}
+                            disabled={isAnimating}
+                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm"
+                            placeholder="Search target"
+                          />
+                        </>
+                      )}
+                      
+                      {operation === 'insert' && (
+                        <>
+                          <label className="block text-white/70 text-xs font-medium mb-1">Value to Insert</label>
+                          <input
+                            type="number"
+                            value={insertValue}
+                            onChange={(e) => setInsertValue(e.target.value)}
+                            disabled={isAnimating}
+                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm"
+                            placeholder="New value"
+                          />
+                        </>
+                      )}
+                      
+                      {operation === 'delete' && (
+                        <>
+                          <label className="block text-white/70 text-xs font-medium mb-1">Index to Delete</label>
+                          <input
+                            type="number"
+                            value={deleteIndex}
+                            onChange={(e) => setDeleteIndex(e.target.value)}
+                            disabled={isAnimating}
+                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm"
+                            placeholder={`0 to ${displayArray.length - 1}`}
+                            min="0"
+                            max={displayArray.length - 1}
+                          />
+                        </>
+                      )}
+                    </div>
+                    
+                    {/* Additional input for insert position */}
+                    {operation === 'insert' && (
+                      <div>
+                        <label className="block text-white/70 text-xs font-medium mb-1">Insert Position</label>
+                        <input
+                          type="number"
+                          value={insertIndex}
+                          onChange={(e) => setInsertIndex(e.target.value)}
+                          disabled={isAnimating}
+                          className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm"
+                          placeholder={`0 to ${displayArray.length}`}
+                          min="0"
+                          max={displayArray.length}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* Animation Controls */}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={startAnimation}
+                        disabled={isAnimating}
+                        className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:opacity-50 text-white py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1"
+                      >
+                        <Play className="w-3 h-3" />
+                        {isAnimating ? 'Running' : 'Start'}
+                      </button>
+                      <button
+                        onClick={resetAnimation}
+                        className="bg-gray-600 hover:bg-gray-500 text-white py-2 px-3 rounded-lg text-sm transition-all"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Speed Control */}
+                  <div className="mt-3">
+                    <label className="block text-white/70 text-xs font-medium mb-1">Animation Speed</label>
+                    <input
+                      type="range"
+                      min="300"
+                      max="2000"
+                      value={speed}
+                      onChange={(e) => setSpeed(Number(e.target.value))}
+                      className="w-full accent-cyan-500 h-1"
+                    />
+                    <div className="flex justify-between text-xs text-white/40 mt-1">
+                      <span>Fast</span>
+                      <span>Slow</span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+          
+          {/* BOTTOM SECTION: Three Panels Horizontally */}
+          <div className="grid lg:grid-cols-3 gap-4">
+            
+            {/* PANEL B: Code Execution (Left) */}
+            <div className="glass-card p-4">
               {/* Language Selector */}
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Code className="w-5 h-5 text-cyan-400" />
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Code className="w-4 h-4 text-cyan-400" />
                   Code Execution
                 </h3>
                 <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
@@ -801,13 +897,11 @@ const ArrayVisualizerPage = () => {
                     <button
                       key={lang}
                       onClick={() => setCodeLanguage(lang)}
-                      className={`px-3 py-1 rounded text-xs font-medium transition-all ${
+                      className={`px-2 py-1 rounded text-xs font-medium transition-all ${
                         codeLanguage === lang
                           ? 'bg-cyan-500 text-white'
                           : 'text-gray-400 hover:text-white'
                       }`}
-                      onMouseEnter={(e) => showTooltip(`Switch to ${lang.toUpperCase()} code`, e)}
-                      onMouseLeave={hideTooltip}
                     >
                       {lang.toUpperCase()}
                     </button>
@@ -815,104 +909,204 @@ const ArrayVisualizerPage = () => {
                 </div>
               </div>
               
-              {/* Code Display with Multi-language Support */}
-              <div className="bg-gray-900/80 rounded-xl p-4 border border-gray-700/50 h-64 overflow-auto">
+              {/* Code Display */}
+              <div className="bg-gray-900/80 rounded-xl p-3 border border-gray-700/50 h-64 overflow-auto">
                 <div className="space-y-1">
                   {(codeTemplates[codeLanguage]?.[operation] || []).map((line, index) => (
                     <motion.div
                       key={`${codeLanguage}-${operation}-${index}`}
                       className={`
-                        py-2 px-3 rounded font-mono text-sm transition-all duration-300 cursor-help
+                        py-1 px-2 rounded font-mono text-xs transition-all duration-300
                         ${currentCodeLine === index
-                          ? 'bg-cyan-500/30 text-cyan-200 border-l-4 border-cyan-400 shadow-lg'
+                          ? 'bg-cyan-500/30 text-cyan-200 border-l-2 border-cyan-400'
                           : 'text-green-400 hover:bg-white/5'
                         }
                       `}
                       animate={{
                         scale: currentCodeLine === index ? 1.02 : 1,
                       }}
-                      onMouseEnter={(e) => showTooltip(`Line ${index + 1}: Explain this code step`, e)}
-                      onMouseLeave={hideTooltip}
                     >
-                      <span className="text-gray-500 mr-3 select-none">{index + 1}</span>
+                      <span className="text-gray-500 mr-2 select-none text-xs">{index + 1}</span>
                       {line}
                     </motion.div>
                   )) || []}
                 </div>
               </div>
-              
-              {/* Live Commentary Scroll */}
-              <div>
-                <h4 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-cyan-400" />
-                  Live Commentary
-                </h4>
-                <div 
-                  ref={commentaryRef}
-                  className="bg-black/30 rounded-lg p-4 h-32 overflow-auto space-y-1 border border-gray-700/30"
-                >
-                  {liveCommentary.map((comment, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="text-sm text-gray-300 leading-relaxed"
-                    >
-                      {comment}
-                    </motion.div>
-                  ))}
+            </div>
+            
+            {/* PANEL C: Array Canvas (Center) */}
+            <div className="glass-card p-4">
+              <div className="text-center mb-3">
+                <h3 className="text-lg font-bold text-white mb-1">Array Canvas</h3>
+                <div className="flex items-center justify-center gap-2 text-cyan-400 text-xs">
+                  <Activity className="w-3 h-3" />
+                  <span>{animationStep || 'Ready for operation'}</span>
                 </div>
               </div>
+              
+              {/* Array Visualization with Dynamic Sizing */}
+              <div className="flex items-center justify-center py-4 min-h-[200px]">
+                <div className="relative w-full max-w-full overflow-hidden">
+                  {/* Visual Cursor for Search Operations */}
+                  {cursorPosition >= 0 && operation === 'search' && (
+                    <motion.div
+                      className={`absolute -top-6 bg-cyan-500 rounded-full flex items-center justify-center shadow-lg ${
+                        displayArray.length <= 6 ? 'w-4 h-4' : 
+                        displayArray.length <= 8 ? 'w-3 h-3' : 'w-2 h-2'
+                      }`}
+                      animate={{ 
+                        x: cursorPosition * (displayArray.length <= 6 ? 64 : 
+                                            displayArray.length <= 8 ? 52 : 
+                                            displayArray.length <= 10 ? 44 : 36),
+                      }}
+                      transition={{ 
+                        type: "spring", 
+                        stiffness: 400, 
+                        damping: 30 
+                      }}
+                    >
+                      <Search className={`text-white ${
+                        displayArray.length <= 6 ? 'w-2 h-2' : 
+                        displayArray.length <= 8 ? 'w-1.5 h-1.5' : 'w-1 h-1'
+                      }`} />
+                    </motion.div>
+                  )}
+                  
+                  {/* Array Elements with Dynamic Sizing */}
+                  <div className={`flex justify-center items-center ${
+                    displayArray.length <= 6 ? 'gap-2' : 
+                    displayArray.length <= 8 ? 'gap-1.5' : 
+                    displayArray.length <= 10 ? 'gap-1' : 'gap-0.5'
+                  }`}>
+                    <AnimatePresence mode="popLayout">
+                      {displayArray.map((value, index) => {
+                        // Dynamic sizing based on array length
+                        const elementSize = displayArray.length <= 6 ? 'w-14 h-14' : 
+                                           displayArray.length <= 8 ? 'w-12 h-12' : 
+                                           displayArray.length <= 10 ? 'w-10 h-10' : 'w-8 h-8';
+                        const fontSize = displayArray.length <= 6 ? 'text-sm' : 
+                                        displayArray.length <= 8 ? 'text-xs' : 
+                                        displayArray.length <= 10 ? 'text-xs' : 'text-xs';
+                        const labelSize = displayArray.length <= 6 ? 'text-xs' : 'text-xs';
+                        const gapSize = displayArray.length <= 6 ? 64 : 
+                                       displayArray.length <= 8 ? 52 : 
+                                       displayArray.length <= 10 ? 44 : 36;
+                        
+                        return (
+                          <motion.div
+                            key={`element-${index}-${value}`}
+                            layout
+                            initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                            animate={{ 
+                              opacity: elementStates[index] === 'deleting' ? 0.3 : 1,
+                              scale: currentElementIndex === index ? 1.1 : 1,
+                              y: 0,
+                              x: shiftingElements[index] ? (index < parseInt(insertIndex || deleteIndex || 0) ? gapSize : -gapSize) : 0,
+                            }}
+                            exit={{ opacity: 0, scale: 0.8, y: -10 }}
+                            transition={{ 
+                              duration: 0.6,
+                              type: "spring",
+                              stiffness: 300,
+                              damping: 25,
+                              layout: { duration: 0.8 }
+                            }}
+                            className="relative flex flex-col items-center"
+                            onMouseEnter={(e) => showTooltip(`Value: ${value}, Index: ${index}, Memory: 0x${(baseMemoryAddress + index * 4).toString(16).toUpperCase()}`, e)}
+                            onMouseLeave={hideTooltip}
+                          >
+                            {/* Index label */}
+                            <div className={`text-white/60 font-mono mb-1 ${labelSize}`}>[{index}]</div>
+                            
+                            {/* Element box with dynamic sizing */}
+                            <motion.div
+                              animate={{
+                                scale: currentElementIndex === index ? 1.1 : 1,
+                                rotateY: currentElementIndex === index ? [0, 5, -5, 0] : 0,
+                              }}
+                              transition={{ duration: 0.3 }}
+                              className={`
+                                ${elementSize} rounded-lg flex items-center justify-center text-white font-bold ${fontSize}
+                                transition-all duration-500 border cursor-pointer
+                                ${getElementStyle(index)}
+                              `}
+                            >
+                              {value}
+                            </motion.div>
+                            
+                            {/* Memory address label */}
+                            <div className={`text-white/40 font-mono mt-1 ${
+                              displayArray.length <= 8 ? 'text-xs' : 'text-xs'
+                            }`}>
+                              0x{(baseMemoryAddress + index * 4).toString(16).toUpperCase()}
+                            </div>
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Status display */}
+              <div className="text-center mt-3">
+                {foundIndex !== -1 && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="inline-flex items-center gap-1 bg-green-500/20 text-green-400 px-3 py-1 rounded-lg border border-green-500/30 text-xs"
+                  >
+                    <Search className="w-3 h-3" />
+                    <span className="font-semibold">Found at index {foundIndex}!</span>
+                  </motion.div>
+                )}
+              </div>
             </div>
-          </div>
-          
-          {/* BOTTOM ROW: Memory Visualization + Collapsible Controls */}
-          <div className="grid lg:grid-cols-2 gap-6" style={{ minHeight: '40vh' }}>
             
-            {/* PANEL C: Memory Representation (Bottom-Left) */}
-            <div className="glass-card p-6">
-              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                <Cpu className="w-5 h-5 text-cyan-400" />
+            {/* PANEL D: Memory Layout (Right) */}
+            <div className="glass-card p-4">
+              <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                <Cpu className="w-4 h-4 text-cyan-400" />
                 Memory Layout
               </h3>
-              <p className="text-white/60 text-sm mb-6 leading-relaxed">
-                Real-time memory view showing contiguous storage and perfect synchronization with array operations.
+              <p className="text-white/60 text-xs mb-4 leading-relaxed">
+                Real-time memory view showing contiguous storage.
               </p>
               
-              <div className="space-y-3 max-h-80 overflow-auto">
+              <div className="space-y-2 max-h-64 overflow-auto">
                 <AnimatePresence mode="popLayout">
                   {memoryArray.map((value, index) => (
                     <motion.div
                       key={`memory-${index}-${value}`}
                       layout
-                      initial={{ opacity: 0, x: 20 }}
+                      initial={{ opacity: 0, x: 10 }}
                       animate={{ 
                         opacity: elementStates[index] === 'deleting' ? 0.3 : 1,
                         x: 0,
-                        scale: currentMemoryIndex === index ? 1.05 : 1
+                        scale: currentMemoryIndex === index ? 1.02 : 1
                       }}
-                      exit={{ opacity: 0, x: -20 }}
+                      exit={{ opacity: 0, x: -10 }}
                       transition={{ 
-                        duration: 0.4,
-                        layout: { duration: 0.8 }
+                        duration: 0.3,
+                        layout: { duration: 0.6 }
                       }}
                       className={`
-                        flex justify-between items-center p-4 rounded-xl border transition-all duration-500 cursor-help
+                        flex justify-between items-center p-2 rounded-lg border transition-all duration-500
                         ${getMemoryStyle(index)}
                       `}
-                      onMouseEnter={(e) => showTooltip(`Memory Address: 0x${(baseMemoryAddress + index * 4).toString(16).toUpperCase()}, Value: ${value}, Index: ${index}`, e)}
+                      onMouseEnter={(e) => showTooltip(`Memory: 0x${(baseMemoryAddress + index * 4).toString(16).toUpperCase()}, Value: ${value}, Index: ${index}`, e)}
                       onMouseLeave={hideTooltip}
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="text-cyan-400 font-mono text-sm font-bold">
+                      <div className="flex items-center gap-2">
+                        <div className="text-cyan-400 font-mono text-xs font-bold">
                           0x{(baseMemoryAddress + index * 4).toString(16).toUpperCase()}
                         </div>
                         <div className="text-white/40 text-xs">
-                          [Index {index}]
+                          [{index}]
                         </div>
                       </div>
                       <div className={`
-                        px-3 py-1 rounded-lg font-bold text-sm transition-all duration-300
+                        px-2 py-1 rounded font-bold text-xs transition-all duration-300
                         ${currentMemoryIndex === index || elementStates[index] === 'examining' || elementStates[index] === 'found' || elementStates[index] === 'inserted' || elementStates[index] === 'accessed'
                           ? 'bg-cyan-500 text-white shadow-lg'
                           : elementStates[index] === 'shifting' || shiftingElements[index]
@@ -929,209 +1123,13 @@ const ArrayVisualizerPage = () => {
                 </AnimatePresence>
               </div>
               
-              <div className="mt-6 p-4 bg-black/20 rounded-lg">
+              <div className="mt-4 p-2 bg-black/20 rounded-lg">
                 <div className="text-xs text-white/50 space-y-1">
-                  <div><strong>Base Address:</strong> 0x{baseMemoryAddress.toString(16).toUpperCase()}</div>
-                  <div><strong>Element Size:</strong> 4 bytes (32-bit integer)</div>
-                  <div><strong>Total Memory:</strong> {memoryArray.length * 4} bytes</div>
-                  <div><strong>Layout:</strong> Contiguous allocation</div>
+                  <div><strong>Base:</strong> 0x{baseMemoryAddress.toString(16).toUpperCase()}</div>
+                  <div><strong>Size:</strong> 4 bytes per element</div>
+                  <div><strong>Total:</strong> {memoryArray.length * 4} bytes</div>
                 </div>
               </div>
-            </div>
-            
-            {/* PANEL D: Collapsible Controls (Bottom-Right) */}
-            <div className="relative">
-              {/* Controls Toggle Button */}
-              <motion.button
-                onClick={() => setControlsVisible(!controlsVisible)}
-                className="absolute top-4 right-4 z-10 bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-lg transition-all"
-                animate={{ rotate: controlsVisible ? 0 : 180 }}
-                onMouseEnter={(e) => showTooltip('Toggle controls panel (O)', e)}
-                onMouseLeave={hideTooltip}
-              >
-                {controlsVisible ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </motion.button>
-              
-              {/* Collapsible Controls Panel */}
-              <AnimatePresence>
-                {controlsVisible && (
-                  <motion.div
-                    initial={{ opacity: 0, x: 300 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 300 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    className="glass-card p-6 h-full"
-                  >
-                    <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                      <Settings className="w-5 h-5 text-cyan-400" />
-                      Operation Controls
-                    </h3>
-                    
-                    {/* Operation Selection */}
-                    <div className="mb-4">
-                      <label className="block text-white/70 text-sm font-medium mb-2">Choose Operation</label>
-                      <div className="relative">
-                        <select
-                          value={operation}
-                          onChange={(e) => setOperation(e.target.value)}
-                          disabled={isAnimating}
-                          className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-4 py-3 appearance-none pr-10 font-medium"
-                          onMouseEnter={(e) => showTooltip('Select which array operation to visualize with step-by-step animation', e)}
-                          onMouseLeave={hideTooltip}
-                        >
-                          <option value="search">🔍 Linear Search (O(n))</option>
-                          <option value="access">⚡ Access Element (O(1))</option>
-                          <option value="insert">➕ Insert Element (O(n))</option>
-                          <option value="delete">❌ Delete Element (O(n))</option>
-                        </select>
-                        <ChevronDown className="absolute right-3 top-3.5 w-5 h-5 text-gray-400 pointer-events-none" />
-                      </div>
-                    </div>
-                    
-                    {/* Operation-specific inputs with enhanced tooltips */}
-                    {operation === 'access' && (
-                      <div className="mb-4">
-                        <label className="block text-white/70 text-sm font-medium mb-2">Index to Access</label>
-                        <input
-                          type="number"
-                          value={accessIndex}
-                          onChange={(e) => setAccessIndex(e.target.value)}
-                          disabled={isAnimating}
-                          className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-4 py-3"
-                          placeholder={`0 to ${displayArray.length - 1}`}
-                          min="0"
-                          max={displayArray.length - 1}
-                          onMouseEnter={(e) => showTooltip('Access element by index - O(1) constant time operation using base_address + (index × 4)', e)}
-                          onMouseLeave={hideTooltip}
-                        />
-                      </div>
-                    )}
-                    
-                    {operation === 'search' && (
-                      <div className="mb-4">
-                        <label className="block text-white/70 text-sm font-medium mb-2">Value to Find</label>
-                        <input
-                          type="number"
-                          value={searchValue}
-                          onChange={(e) => setSearchValue(e.target.value)}
-                          disabled={isAnimating}
-                          className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-4 py-3"
-                          placeholder="Enter search target"
-                          onMouseEnter={(e) => showTooltip('Linear search - O(n) time complexity, checks each element sequentially', e)}
-                          onMouseLeave={hideTooltip}
-                        />
-                      </div>
-                    )}
-                    
-                    {operation === 'insert' && (
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-white/70 text-sm font-medium mb-2">Value to Insert</label>
-                          <input
-                            type="number"
-                            value={insertValue}
-                            onChange={(e) => setInsertValue(e.target.value)}
-                            disabled={isAnimating}
-                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-4 py-3"
-                            placeholder="New value"
-                            onMouseEnter={(e) => showTooltip('Value to insert into the array', e)}
-                            onMouseLeave={hideTooltip}
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-white/70 text-sm font-medium mb-2">Insert Position</label>
-                          <input
-                            type="number"
-                            value={insertIndex}
-                            onChange={(e) => setInsertIndex(e.target.value)}
-                            disabled={isAnimating}
-                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-4 py-3"
-                            placeholder={`0 to ${displayArray.length}`}
-                            min="0"
-                            max={displayArray.length}
-                            onMouseEnter={(e) => showTooltip('Insert position - O(n) operation requiring element shifting', e)}
-                            onMouseLeave={hideTooltip}
-                          />
-                        </div>
-                      </div>
-                    )}
-                    
-                    {operation === 'delete' && (
-                      <div className="mb-4">
-                        <label className="block text-white/70 text-sm font-medium mb-2">Index to Delete</label>
-                        <input
-                          type="number"
-                          value={deleteIndex}
-                          onChange={(e) => setDeleteIndex(e.target.value)}
-                          disabled={isAnimating}
-                          className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-4 py-3"
-                          placeholder={`0 to ${displayArray.length - 1}`}
-                          min="0"
-                          max={displayArray.length - 1}
-                          onMouseEnter={(e) => showTooltip('Delete by index - O(n) operation requiring left-shift of remaining elements', e)}
-                          onMouseLeave={hideTooltip}
-                        />
-                      </div>
-                    )}
-                    
-                    {/* Animation Controls */}
-                    <div className="flex gap-3 mb-4">
-                      <button
-                        onClick={startAnimation}
-                        disabled={isAnimating}
-                        className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:opacity-50 text-white py-3 px-4 rounded-lg transition-all flex items-center justify-center gap-2 font-semibold"
-                        onMouseEnter={(e) => showTooltip('Start the visual step-by-step animation', e)}
-                        onMouseLeave={hideTooltip}
-                      >
-                        <Play className="w-4 h-4" />
-                        {isAnimating ? 'Running...' : 'Start Animation'}
-                      </button>
-                      <button
-                        onClick={resetAnimation}
-                        className="bg-gray-600 hover:bg-gray-500 text-white py-3 px-4 rounded-lg transition-all"
-                        onMouseEnter={(e) => showTooltip('Reset to initial state', e)}
-                        onMouseLeave={hideTooltip}
-                      >
-                        <RotateCcw className="w-4 h-4" />
-                      </button>
-                    </div>
-                    
-                    {/* Speed Control */}
-                    <div>
-                      <label className="block text-white/70 text-sm font-medium mb-2">Animation Speed</label>
-                      <input
-                        type="range"
-                        min="300"
-                        max="2000"
-                        value={speed}
-                        onChange={(e) => setSpeed(Number(e.target.value))}
-                        className="w-full accent-cyan-500"
-                        onMouseEnter={(e) => showTooltip('Control animation timing for better learning pace', e)}
-                        onMouseLeave={hideTooltip}
-                      />
-                      <div className="flex justify-between text-xs text-white/50 mt-1">
-                        <span>Fast (300ms)</span>
-                        <span>Slow (2000ms)</span>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              
-              {/* Minimized Controls Hint */}
-              {!controlsVisible && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="glass-card p-4 h-32 flex items-center justify-center"
-                >
-                  <div className="text-center">
-                    <Settings className="w-8 h-8 text-cyan-400 mx-auto mb-2" />
-                    <p className="text-white/60 text-sm">Controls Hidden</p>
-                    <p className="text-white/40 text-xs">Click to expand</p>
-                  </div>
-                </motion.div>
-              )}
             </div>
           </div>
         </div>

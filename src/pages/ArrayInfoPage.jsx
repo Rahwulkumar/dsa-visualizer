@@ -2,6 +2,11 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Database, Clock, Code, Layers, MemoryStick } from 'lucide-react';
+import { Canvas } from '@react-three/fiber';
+import { Stars, OrbitControls } from '@react-three/drei';
+import SpaceBackground from '../components/3d/SpaceBackground';
+import AsteroidField from '../components/3d/AsteroidField';
+import FloatingParticles from '../components/3d/FloatingParticles';
 
 const ArrayInfoPage = () => {
   const navigate = useNavigate();
@@ -59,6 +64,43 @@ numbers.splice(1, 1);      // Remove element at index 1
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-space-deep to-space-dark">
+      {/* 3D Space Background */}
+      <div className="fixed inset-0 z-0">
+        <Canvas
+          camera={{ position: [0, 0, 5], fov: 75 }}
+          style={{ background: 'radial-gradient(circle at 30% 20%, #0a0a0f 0%, #000000 100%)' }}
+        >
+          <ambientLight intensity={0.1} />
+          <pointLight position={[10, 10, 10]} intensity={0.5} />
+          
+          {/* Starfield background */}
+          <Stars 
+            radius={400} 
+            depth={60} 
+            count={3000} 
+            factor={3} 
+            saturation={0} 
+            fade={true}
+            speed={0.3}
+          />
+          
+          {/* Custom space elements */}
+          <SpaceBackground />
+          <AsteroidField />
+          <FloatingParticles />
+          
+          <OrbitControls
+            enableZoom={false}
+            enablePan={false}
+            enableRotate={true}
+            autoRotate={true}
+            autoRotateSpeed={0.2}
+            maxPolarAngle={Math.PI / 2}
+            minPolarAngle={Math.PI / 2}
+          />
+        </Canvas>
+      </div>
+
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-cyan-400 rounded-full animate-twinkle opacity-30" />
