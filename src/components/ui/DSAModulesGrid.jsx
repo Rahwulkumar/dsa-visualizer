@@ -7,13 +7,26 @@ const DSAModulesGrid = () => {
   const navigate = useNavigate();
 
   const handleModuleClick = (moduleId) => {
-    // Navigate to specific module pages
-    if (moduleId === 'arrays') {
-      navigate('/array-info');
+    // Navigate to specific module info pages
+    const routeMap = {
+      'arrays': '/array-info',
+      'linked-lists': '/linked-list-info',
+      'stacks': '/stack-info',
+      'queues': '/queue-info',
+      'trees': '/tree-info',
+      'graphs': '/graph-info',
+      'hash-tables': '/hash-table-info',
+      'heaps': '/heap-info',
+      'tries': '/trie-info',
+      'sorting': '/sorting-info',
+      'searching': '/searching-info'
+    };
+
+    const route = routeMap[moduleId];
+    if (route) {
+      navigate(route);
     } else {
-      // For other modules, just log for now
-      console.log(`Navigating to ${moduleId} module`);
-      // navigate(`/modules/${moduleId}`);
+      console.log(`No route defined for ${moduleId} module`);
     }
   };
   const modules = [

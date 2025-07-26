@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -17,7 +17,9 @@ import {
   Settings,
   Code,
   Menu,
-  X
+  X,
+  Layers,
+  Database
 } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
 import { Stars, OrbitControls } from '@react-three/drei';
@@ -39,7 +41,7 @@ const ArrayVisualizerPage = () => {
   
   // Enhanced UI state
   const [codeLanguage, setCodeLanguage] = useState('python'); // python, java, c
-  const [controlsVisible, setControlsVisible] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Enhanced animation state tracking with visual movement
   const [currentElementIndex, setCurrentElementIndex] = useState(-1);
@@ -47,8 +49,15 @@ const ArrayVisualizerPage = () => {
   const [currentMemoryIndex, setCurrentMemoryIndex] = useState(-1);
   const [elementStates, setElementStates] = useState({});
   const [isAnimating, setIsAnimating] = useState(false);
-  const [animationStep, setAnimationStep] = useState('');
+  const [animationStep, setAnimationStep] = useState('Ready to start...');
   const [foundIndex, setFoundIndex] = useState(-1);
+  
+  // Enhanced memory visualization
+  const [heapMemory, setHeapMemory] = useState({});
+  const [stackMemory, setStackMemory] = useState([]);
+  const [currentStackFrame, setCurrentStackFrame] = useState(null);
+  const [currentIteration, setCurrentIteration] = useState(-1);
+  const [loopVariable, setLoopVariable] = useState('');
   
   // Visual movement tracking for TRUE animations
   const [movingElements, setMovingElements] = useState({}); // Track elements that are visually moving
@@ -69,6 +78,108 @@ const ArrayVisualizerPage = () => {
   
   // Tooltip state
   const [tooltip, setTooltip] = useState({ show: false, content: '', x: 0, y: 0 });
+
+  // Get base memory address based on language
+  const getBaseAddress = () => {
+    switch(codeLanguage) {
+      case 'c': return 0x7fff5fbff000;
+      case 'java': return 0x00007f8b1c000000;
+      case 'python': return 0x7f8b1c000000;
+      default: return 0x7fff5fbff000;
+    }
+  };
+
+  // Initialize memory model based on programming language
+  const initializeMemoryModel = useCallback(() => {
+    const baseAddr = getBaseAddress();
+    
+    if (codeLanguage === 'c') {
+      // C uses stack allocation for arrays
+      setStackMemory([
+        { name: 'main()', variables: { arr: `int[${arraySize}]`, i: 'int', temp: 'int' } },
+      ]);
+      setHeapMemory({});
+    } else if (codeLanguage === 'java') {
+      // Java uses heap for arrays, stack for references
+      setStackMemory([
+        { name: 'main()', variables: { arr: 'int[]', i: 'int', temp: 'int' } },
+      ]);
+      setHeapMemory({
+        arrayObject: { type: `int[${arraySize}]`, address: baseAddr, data: [...displayArray] }
+      });
+    } else {
+      // Python uses heap for everything
+      setStackMemory([
+        { name: 'main()', variables: { arr: 'list', i: 'int', temp: 'object' } },
+      ]);
+      setHeapMemory({
+        listObject: { type: 'list', address: baseAddr, data: [...displayArray] }
+      });
+    }
+  }, [codeLanguage, arraySize, displayArray]);
+
+  // Get element style based on state
+  const getElementStyle = (index) => {
+    const state = elementStates[index];
+    let className = "relative w-16 h-16 rounded-xl flex items-center justify-center transition-all duration-500 border-2 cursor-pointer ";
+    
+    switch(state) {
+      case 'checking':
+        className += "bg-blue-500/30 border-blue-400 text-blue-100 scale-110 shadow-lg shadow-blue-500/50";
+        break;
+      case 'found':
+        className += "bg-green-500/30 border-green-400 text-green-100 scale-110 shadow-lg shadow-green-500/50 animate-pulse";
+        break;
+      case 'checked':
+        className += "bg-red-500/20 border-red-400/50 text-red-200";
+        break;
+      case 'accessing':
+        className += "bg-cyan-500/30 border-cyan-400 text-cyan-100 scale-110 shadow-lg shadow-cyan-500/50";
+        break;
+      case 'accessed':
+        className += "bg-cyan-500/30 border-cyan-400 text-cyan-100 shadow-lg shadow-cyan-500/50";
+        break;
+      case 'shifting':
+        className += "bg-yellow-500/30 border-yellow-400 text-yellow-100 scale-105 shadow-lg shadow-yellow-500/50";
+        break;
+      case 'moved':
+        className += "bg-purple-500/30 border-purple-400 text-purple-100";
+        break;
+      case 'inserted':
+        className += "bg-green-500/30 border-green-400 text-green-100 scale-110 shadow-lg shadow-green-500/50 animate-pulse";
+        break;
+      case 'toDelete':
+        className += "bg-red-500/30 border-red-400 text-red-100 scale-110 shadow-lg shadow-red-500/50";
+        break;
+      case 'deleting':
+        className += "bg-red-500/30 border-red-400 text-red-100 opacity-30 scale-90";
+        break;
+      default:
+        if (index === currentElementIndex) {
+          className += "bg-blue-500/20 border-blue-400/70 text-blue-100 scale-105";
+        } else {
+          className += "bg-white/10 border-white/30 text-white hover:bg-white/20 hover:scale-105";
+        }
+        break;
+    }
+    
+    return className;
+  };
+
+  // Initialize effects
+  useEffect(() => {
+    initializeMemoryModel();
+  }, [initializeMemoryModel]);
+
+  // Initialize array based on size
+  useEffect(() => {
+    generateNewArray();
+  }, [arraySize]);
+
+  // Ensure page starts at top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   // Initialize array based on size
   useEffect(() => {
@@ -554,37 +665,7 @@ const ArrayVisualizerPage = () => {
     setTooltip({ show: false, content: '', x: 0, y: 0 });
   };
 
-  // Get element style based on state
-  const getElementStyle = (index) => {
-    const state = elementStates[index];
-    const isCurrentElement = currentElementIndex === index;
-    
-    if (state === 'examining' || isCurrentElement) {
-      return 'bg-gradient-to-br from-blue-400 to-blue-600 border-blue-300 shadow-2xl shadow-blue-500/50 scale-110';
-    } else if (state === 'found' || foundIndex === index) {
-      return 'bg-gradient-to-br from-green-400 to-green-600 border-green-300 shadow-2xl shadow-green-500/50 scale-110';
-    } else if (state === 'notMatch') {
-      return 'bg-gradient-to-br from-red-400 to-red-600 border-red-300 shadow-xl shadow-red-500/50';
-    } else if (state === 'checked') {
-      return 'bg-gradient-to-br from-gray-400 to-gray-600 border-gray-300 opacity-60';
-    } else if (state === 'shifting') {
-      return 'bg-gradient-to-br from-yellow-400 to-orange-500 border-yellow-300 shadow-xl shadow-yellow-500/50 scale-105';
-    } else if (state === 'shifted') {
-      return 'bg-gradient-to-br from-purple-400 to-purple-600 border-purple-300';
-    } else if (state === 'inserted') {
-      return 'bg-gradient-to-br from-cyan-400 to-cyan-600 border-cyan-300 shadow-2xl shadow-cyan-500/50 scale-110';
-    } else if (state === 'toDelete') {
-      return 'bg-gradient-to-br from-red-500 to-red-700 border-red-400 shadow-xl shadow-red-500/50';
-    } else if (state === 'deleting') {
-      return 'bg-gradient-to-br from-red-600 to-red-800 border-red-500 opacity-30 scale-90';
-    } else if (state === 'receiving') {
-      return 'bg-gradient-to-br from-green-400 to-teal-500 border-green-300 shadow-lg shadow-green-500/30';
-    } else if (state === 'accessed') {
-      return 'bg-gradient-to-br from-cyan-400 to-blue-500 border-cyan-300 shadow-2xl shadow-cyan-500/50 scale-110';
-    }
-    
-    return 'bg-gradient-to-br from-purple-500 to-pink-500 border-purple-300/50 shadow-lg';
-  };
+
 
   // Get memory block style based on state
   const getMemoryStyle = (index) => {
@@ -639,21 +720,6 @@ const ArrayVisualizerPage = () => {
         </Canvas>
       </div>
 
-      {/* Tooltip */}
-      <AnimatePresence>
-        {tooltip.show && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="fixed z-50 bg-gray-900/95 text-white p-3 rounded-lg border border-cyan-500/30 backdrop-blur-sm max-w-xs shadow-xl"
-            style={{ left: tooltip.x + 10, top: tooltip.y - 40 }}
-          >
-            <div className="text-sm leading-relaxed">{tooltip.content}</div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-cyan-400 rounded-full animate-twinkle opacity-30" />
@@ -663,477 +729,792 @@ const ArrayVisualizerPage = () => {
              style={{ animationDelay: '2s' }} />
       </div>
 
-      {/* Navigation */}
+      {/* Minimal Navigation */}
       <div className="relative z-10 p-6">
         <div className="flex justify-between items-center">
           <button
             onClick={() => navigate('/array-info')}
             className="text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-2 group"
-            onMouseEnter={(e) => showTooltip('Return to the Array information page', e)}
-            onMouseLeave={hideTooltip}
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Back to Array Info
           </button>
           
-          {/* Array Size Configuration */}
-          <div className="flex items-center gap-4">
-            <label className="text-white/70 text-sm font-medium">Array Size:</label>
-            <select
-              value={arraySize}
-              onChange={(e) => setArraySize(parseInt(e.target.value))}
-              disabled={isAnimating}
-              className="bg-gray-800 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm"
-              onMouseEnter={(e) => showTooltip('Choose the size of your array (3-12 elements)', e)}
-              onMouseLeave={hideTooltip}
-            >
-              {[3,4,5,6,7].map(size => (
-                <option key={size} value={size}>{size} elements</option>
-              ))}
-            </select>
+          {/* Minimal Status Indicator */}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${isAnimating ? 'bg-green-400 animate-pulse' : 'bg-gray-500'}`} />
+              <span className="text-white/60 text-sm">
+                {isAnimating ? 'Animation Running' : 'Ready'}
+              </span>
+            </div>
             
-            <button
-              onClick={generateNewArray}
+            {/* Sidebar Toggle Button */}
+            <motion.button
+              onClick={() => setSidebarOpen(true)}
               disabled={isAnimating}
-              className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-400 hover:to-teal-400 disabled:opacity-50 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all"
-              onMouseEnter={(e) => showTooltip('Generate a new random array', e)}
-              onMouseLeave={hideTooltip}
+              whileHover={{ 
+                scale: 1.05, 
+                boxShadow: "0 0 25px rgba(6, 182, 212, 0.5)"
+              }}
+              whileTap={{ scale: 0.95 }}
+              className="relative bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:opacity-50 text-white px-6 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2 shadow-lg group overflow-hidden"
             >
-              New Array
-            </button>
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+              
+              <Settings className="w-4 h-4 relative z-10 group-hover:rotate-90 transition-transform duration-300" />
+              <span className="relative z-10">Open Controls</span>
+              
+              {/* Pulsing indicator when animation is ready */}
+              {!isAnimating && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+              )}
+            </motion.button>
           </div>
         </div>
       </div>
 
-      {/* Enhanced Layout - Operation Controls at Top, Three Panels Below */}
-      <div className="relative z-10 px-4 pb-4">
-        <div className="max-w-7xl mx-auto space-y-4">
-          
-          {/* TOP SECTION: Operation Controls (Panel A) */}
-          <div className="glass-card p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <Settings className="w-4 h-4 text-cyan-400" />
-                Operation Controls
-              </h3>
-              
-              {/* Controls Toggle Button */}
-              <motion.button
-                onClick={() => setControlsVisible(!controlsVisible)}
-                className="bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-lg transition-all"
-                animate={{ rotate: controlsVisible ? 0 : 180 }}
-                onMouseEnter={(e) => showTooltip('Toggle controls panel', e)}
-                onMouseLeave={hideTooltip}
-              >
-                {controlsVisible ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-              </motion.button>
-            </div>
+      {/* Floating Status Widget (when sidebar is closed) */}
+      {/* Status widget removed - opens only when user clicks controls */}
+
+      {/* Sidebar Controls */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <>
+            {/* Backdrop with blur effect */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 z-40 enhanced-backdrop"
+              onClick={() => setSidebarOpen(false)}
+            />
             
-            {/* Collapsible Controls Content */}
-            <AnimatePresence>
-              {controlsVisible && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  className="overflow-hidden"
-                >
-                  <div className="grid lg:grid-cols-4 gap-4">
-                    {/* Operation Selection */}
+            {/* Sidebar */}
+            <motion.div
+              initial={{ x: -450, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -450, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 280, damping: 26 }}
+              className="fixed left-0 top-0 h-full w-[420px] sidebar-glass z-50"
+            >
+              {/* Sidebar Header with Gradient */}
+              <div className="relative bg-gradient-to-r from-cyan-600/20 via-blue-600/20 to-purple-600/20 border-b border-gray-700/60 backdrop-blur-sm">
+                <div className="flex items-center justify-between p-6">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-cyan-500/20 rounded-lg border border-cyan-500/30">
+                      <Settings className="w-6 h-6 text-cyan-400" />
+                    </div>
                     <div>
-                      <label className="block text-white/70 text-xs font-medium mb-1">Choose Operation</label>
-                      <div className="relative">
+                      <h2 className="text-xl font-bold text-white">Array Controls</h2>
+                      <p className="text-sm text-gray-400">Configure your visualization</p>
+                    </div>
+                  </div>
+                  <motion.button
+                    onClick={() => setSidebarOpen(false)}
+                    whileHover={{ scale: 1.1, backgroundColor: 'rgba(239, 68, 68, 0.2)' }}
+                    whileTap={{ scale: 0.95 }}
+                    className="text-gray-400 hover:text-white transition-all p-2 rounded-lg border border-gray-600/50 hover:border-red-500/50"
+                  >
+                    <X className="w-5 h-5" />
+                  </motion.button>
+                </div>
+                
+                {/* Progress indicator */}
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-800">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-cyan-500 to-blue-500"
+                    initial={{ width: "0%" }}
+                    animate={{ width: "100%" }}
+                    transition={{ duration: 0.8, delay: 0.2 }}
+                  />
+                </div>
+              </div>
+              
+              {/* Sidebar Content */}
+              <div className="flex flex-col h-full">
+                <div className="flex-1 p-6 space-y-8 overflow-y-auto custom-scrollbar">
+                  
+                  {/* Array Configuration */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.05 }}
+                    className="space-y-4"
+                  >
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">⚙️</span>
+                      </div>
+                      <label className="text-white font-semibold text-lg">Array Configuration</label>
+                    </div>
+
+                    <div className="bg-gradient-to-r from-gray-800/60 to-gray-900/60 rounded-xl p-5 border border-gray-700/50 space-y-4">
+                      {/* Array Size */}
+                      <div>
+                        <label className="block text-white font-medium mb-2">Array Size</label>
+                        <div className="flex items-center gap-3">
+                          <select
+                            value={arraySize}
+                            onChange={(e) => setArraySize(parseInt(e.target.value))}
+                            disabled={isAnimating}
+                            className="flex-1 bg-gray-800/80 text-white border border-gray-600 rounded-xl px-4 py-3 text-sm focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm"
+                          >
+                            {[3,4,5,6,7,8,9,10].map(size => (
+                              <option key={size} value={size}>{size} elements</option>
+                            ))}
+                          </select>
+                          <motion.button
+                            onClick={generateNewArray}
+                            disabled={isAnimating}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 disabled:opacity-50 text-white px-4 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2"
+                          >
+                            <RotateCcw className="w-4 h-4" />
+                            New
+                          </motion.button>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-2">
+                          Current array length: {displayArray.length} elements
+                        </div>
+                      </div>
+
+                      {/* Code Language */}
+                      <div>
+                        <label className="block text-white font-medium mb-2">Code Language</label>
                         <select
-                          value={operation}
-                          onChange={(e) => setOperation(e.target.value)}
-                          disabled={isAnimating}
-                          className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm appearance-none pr-8"
-                          onMouseEnter={(e) => showTooltip('Select array operation to visualize', e)}
-                          onMouseLeave={hideTooltip}
+                          value={codeLanguage}
+                          onChange={(e) => setCodeLanguage(e.target.value)}
+                          className="w-full bg-gray-800/80 text-white border border-gray-600 rounded-xl px-4 py-3 text-sm focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm"
                         >
-                          <option value="search">🔍 Search (O(n))</option>
-                          <option value="access">⚡ Access (O(1))</option>
-                          <option value="insert">➕ Insert (O(n))</option>
-                          <option value="delete">❌ Delete (O(n))</option>
+                          <option value="python">🐍 Python</option>
+                          <option value="java">☕ Java</option>
+                          <option value="c">⚡ C</option>
                         </select>
-                        <ChevronDown className="absolute right-2 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                        <div className="text-xs text-gray-400 mt-2">
+                          Choose your preferred programming language for code display
+                        </div>
                       </div>
                     </div>
-                    
-                    {/* Operation-specific inputs */}
-                    <div>
-                      {operation === 'access' && (
-                        <>
-                          <label className="block text-white/70 text-xs font-medium mb-1">Index to Access</label>
-                          <input
-                            type="number"
-                            value={accessIndex}
-                            onChange={(e) => setAccessIndex(e.target.value)}
-                            disabled={isAnimating}
-                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm"
-                            placeholder={`0 to ${displayArray.length - 1}`}
-                            min="0"
-                            max={displayArray.length - 1}
-                          />
-                        </>
-                      )}
-                      
-                      {operation === 'search' && (
-                        <>
-                          <label className="block text-white/70 text-xs font-medium mb-1">Value to Find</label>
-                          <input
-                            type="number"
-                            value={searchValue}
-                            onChange={(e) => setSearchValue(e.target.value)}
-                            disabled={isAnimating}
-                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm"
-                            placeholder="Search target"
-                          />
-                        </>
-                      )}
-                      
-                      {operation === 'insert' && (
-                        <>
-                          <label className="block text-white/70 text-xs font-medium mb-1">Value to Insert</label>
-                          <input
-                            type="number"
-                            value={insertValue}
-                            onChange={(e) => setInsertValue(e.target.value)}
-                            disabled={isAnimating}
-                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm"
-                            placeholder="New value"
-                          />
-                        </>
-                      )}
-                      
-                      {operation === 'delete' && (
-                        <>
-                          <label className="block text-white/70 text-xs font-medium mb-1">Index to Delete</label>
-                          <input
-                            type="number"
-                            value={deleteIndex}
-                            onChange={(e) => setDeleteIndex(e.target.value)}
-                            disabled={isAnimating}
-                            className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm"
-                            placeholder={`0 to ${displayArray.length - 1}`}
-                            min="0"
-                            max={displayArray.length - 1}
-                          />
-                        </>
-                      )}
+                  </motion.div>
+
+                  {/* Current Operation Status */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 }}
+                    className="bg-gradient-to-r from-gray-800/80 to-gray-900/80 rounded-xl p-4 border border-gray-700/50"
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className={`w-3 h-3 rounded-full ${isAnimating ? 'bg-green-400 animate-pulse' : 'bg-gray-500'}`} />
+                      <span className="text-white font-semibold">Status</span>
                     </div>
-                    
-                    {/* Additional input for insert position */}
-                    {operation === 'insert' && (
-                      <div>
-                        <label className="block text-white/70 text-xs font-medium mb-1">Insert Position</label>
-                        <input
-                          type="number"
-                          value={insertIndex}
-                          onChange={(e) => setInsertIndex(e.target.value)}
-                          disabled={isAnimating}
-                          className="w-full bg-gray-800 text-white border border-gray-600 rounded-lg px-3 py-2 text-sm"
-                          placeholder={`0 to ${displayArray.length}`}
-                          min="0"
-                          max={displayArray.length}
+                    <p className="text-sm text-gray-300">
+                      {isAnimating ? 'Animation in progress...' : 'Ready for operation'}
+                    </p>
+                    {isAnimating && (
+                      <div className="mt-2 bg-gray-800 rounded-full h-2 overflow-hidden">
+                        <motion.div
+                          className="h-full bg-gradient-to-r from-cyan-500 to-blue-500"
+                          animate={{ width: ["0%", "100%"] }}
+                          transition={{ duration: 2, repeat: Infinity }}
                         />
                       </div>
                     )}
-                    
-                    {/* Animation Controls */}
-                    <div className="flex gap-2">
-                      <button
-                        onClick={startAnimation}
-                        disabled={isAnimating}
-                        className="flex-1 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 disabled:opacity-50 text-white py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-1"
-                      >
-                        <Play className="w-3 h-3" />
-                        {isAnimating ? 'Running' : 'Start'}
-                      </button>
-                      <button
-                        onClick={resetAnimation}
-                        className="bg-gray-600 hover:bg-gray-500 text-white py-2 px-3 rounded-lg text-sm transition-all"
-                      >
-                        <RotateCcw className="w-3 h-3" />
-                      </button>
+                  </motion.div>
+
+                  {/* Operation Selection */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2 }}
+                  >
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">1</span>
+                      </div>
+                      <label className="text-white font-semibold text-lg">Choose Operation</label>
                     </div>
-                  </div>
+                    <div className="grid grid-cols-1 gap-3">
+                      {[
+                        { 
+                          value: 'search', 
+                          icon: '🔍', 
+                          label: 'Linear Search', 
+                          complexity: 'O(n)',
+                          desc: 'Find element by value', 
+                          color: 'from-emerald-500/20 to-teal-500/20',
+                          borderColor: 'border-emerald-500/30'
+                        },
+                        { 
+                          value: 'access', 
+                          icon: '⚡', 
+                          label: 'Direct Access', 
+                          complexity: 'O(1)',
+                          desc: 'Get value by index', 
+                          color: 'from-yellow-500/20 to-orange-500/20',
+                          borderColor: 'border-yellow-500/30'
+                        },
+                        { 
+                          value: 'insert', 
+                          icon: '➕', 
+                          label: 'Insert Element', 
+                          complexity: 'O(n)',
+                          desc: 'Add element at position', 
+                          color: 'from-blue-500/20 to-indigo-500/20',
+                          borderColor: 'border-blue-500/30'
+                        },
+                        { 
+                          value: 'delete', 
+                          icon: '❌', 
+                          label: 'Delete Element', 
+                          complexity: 'O(n)',
+                          desc: 'Remove element from array', 
+                          color: 'from-red-500/20 to-pink-500/20',
+                          borderColor: 'border-red-500/30'
+                        }
+                      ].map((op, index) => (
+                        <motion.button
+                          key={op.value}
+                          onClick={() => setOperation(op.value)}
+                          disabled={isAnimating}
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          whileTap={{ scale: 0.98 }}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.3 + index * 0.1 }}
+                          className={`relative p-4 rounded-xl border-2 transition-all text-left group operation-button ${
+                            operation === op.value
+                              ? `${op.color} ${op.borderColor} shadow-lg scale-105`
+                              : 'bg-gray-800/50 border-gray-600/50 hover:border-gray-500/70 hover:bg-gray-800/70'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className={`text-2xl p-2 rounded-lg ${operation === op.value ? 'bg-white/10' : 'bg-gray-700/50'} transition-all`}>
+                                {op.icon}
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className={`font-semibold ${operation === op.value ? 'text-white' : 'text-gray-300'}`}>
+                                    {op.label}
+                                  </span>
+                                  <span className={`text-xs px-2 py-1 rounded-full font-mono ${
+                                    operation === op.value ? 'bg-white/20 text-white' : 'bg-gray-700 text-gray-400'
+                                  }`}>
+                                    {op.complexity}
+                                  </span>
+                                </div>
+                                <div className={`text-sm ${operation === op.value ? 'text-gray-200' : 'text-gray-500'}`}>
+                                  {op.desc}
+                                </div>
+                              </div>
+                            </div>
+                            {operation === op.value && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center"
+                              >
+                                <motion.div
+                                  initial={{ pathLength: 0 }}
+                                  animate={{ pathLength: 1 }}
+                                  transition={{ duration: 0.3 }}
+                                  className="w-3 h-3 text-white"
+                                >
+                                  ✓
+                                </motion.div>
+                              </motion.div>
+                            )}
+                          </div>
+                        </motion.button>
+                      ))}
+                    </div>
+                  </motion.div>
                   
-                  {/* Speed Control */}
-                  <div className="mt-3">
-                    <label className="block text-white/70 text-xs font-medium mb-1">Animation Speed</label>
-                    <input
-                      type="range"
-                      min="300"
-                      max="2000"
-                      value={speed}
-                      onChange={(e) => setSpeed(Number(e.target.value))}
-                      className="w-full accent-cyan-500 h-1"
-                    />
-                    <div className="flex justify-between text-xs text-white/40 mt-1">
-                      <span>Fast</span>
-                      <span>Slow</span>
+                  {/* Operation Parameters */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4 }}
+                    className="space-y-6"
+                  >
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">2</span>
+                      </div>
+                      <label className="text-white font-semibold text-lg">Configure Parameters</label>
+                    </div>
+
+                    <AnimatePresence mode="wait">
+                      {operation === 'access' && (
+                        <motion.div
+                          key="access"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="space-y-3"
+                        >
+                          <label className="block text-white font-medium">Array Index</label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              value={accessIndex}
+                              onChange={(e) => setAccessIndex(e.target.value)}
+                              disabled={isAnimating}
+                              className="w-full bg-gray-800/80 text-white border border-gray-600 rounded-xl px-4 py-3 text-sm focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm"
+                              placeholder={`Enter index (0-${displayArray.length - 1})`}
+                              min="0"
+                              max={displayArray.length - 1}
+                            />
+                            <div className="absolute right-3 top-3 text-gray-400 text-sm">
+                              Max: {displayArray.length - 1}
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-400 bg-gray-800/50 p-2 rounded-lg">
+                            💡 Access any element in constant time O(1)
+                          </div>
+                        </motion.div>
+                      )}
+                      
+                      {operation === 'search' && (
+                        <motion.div
+                          key="search"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="space-y-3"
+                        >
+                          <label className="block text-white font-medium">Search Value</label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              value={searchValue}
+                              onChange={(e) => setSearchValue(e.target.value)}
+                              disabled={isAnimating}
+                              className="w-full bg-gray-800/80 text-white border border-gray-600 rounded-xl px-4 py-3 text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all backdrop-blur-sm"
+                              placeholder="Enter value to find"
+                            />
+                            <div className="absolute right-3 top-3 text-gray-400">
+                              🔍
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-400 bg-gray-800/50 p-2 rounded-lg">
+                            💡 Linear search checks each element sequentially
+                          </div>
+                        </motion.div>
+                      )}
+                      
+                      {operation === 'insert' && (
+                        <motion.div
+                          key="insert"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="space-y-4"
+                        >
+                          <div>
+                            <label className="block text-white font-medium mb-2">New Value</label>
+                            <input
+                              type="number"
+                              value={insertValue}
+                              onChange={(e) => setInsertValue(e.target.value)}
+                              disabled={isAnimating}
+                              className="w-full bg-gray-800/80 text-white border border-gray-600 rounded-xl px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm"
+                              placeholder="Enter new value"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-white font-medium mb-2">Insert Position</label>
+                            <div className="relative">
+                              <input
+                                type="number"
+                                value={insertIndex}
+                                onChange={(e) => setInsertIndex(e.target.value)}
+                                disabled={isAnimating}
+                                className="w-full bg-gray-800/80 text-white border border-gray-600 rounded-xl px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm"
+                                placeholder={`Position (0-${displayArray.length})`}
+                                min="0"
+                                max={displayArray.length}
+                              />
+                              <div className="absolute right-3 top-3 text-gray-400 text-sm">
+                                Max: {displayArray.length}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-400 bg-gray-800/50 p-2 rounded-lg">
+                            💡 Elements after insertion point will shift right
+                          </div>
+                        </motion.div>
+                      )}
+                      
+                      {operation === 'delete' && (
+                        <motion.div
+                          key="delete"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: -20 }}
+                          className="space-y-3"
+                        >
+                          <label className="block text-white font-medium">Index to Delete</label>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              value={deleteIndex}
+                              onChange={(e) => setDeleteIndex(e.target.value)}
+                              disabled={isAnimating}
+                              className="w-full bg-gray-800/80 text-white border border-gray-600 rounded-xl px-4 py-3 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all backdrop-blur-sm"
+                              placeholder={`Index (0-${displayArray.length - 1})`}
+                              min="0"
+                              max={displayArray.length - 1}
+                            />
+                            <div className="absolute right-3 top-3 text-gray-400 text-sm">
+                              Max: {displayArray.length - 1}
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-400 bg-gray-800/50 p-2 rounded-lg">
+                            💡 Elements after deletion point will shift left
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                  
+                  {/* Animation Settings */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5 }}
+                    className="space-y-4"
+                  >
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-sm">3</span>
+                      </div>
+                      <label className="text-white font-semibold text-lg">Animation Settings</label>
+                    </div>
+
+                    <div className="bg-gradient-to-r from-gray-800/60 to-gray-900/60 rounded-xl p-5 border border-gray-700/50">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-white font-medium">Speed</span>
+                        <span className="text-cyan-400 font-mono text-sm bg-cyan-500/20 px-2 py-1 rounded">
+                          {speed}ms
+                        </span>
+                      </div>
+                      <div className="relative">
+                        <input
+                          type="range"
+                          min="300"
+                          max="2000"
+                          value={speed}
+                          onChange={(e) => setSpeed(Number(e.target.value))}
+                          className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer range-slider"
+                          style={{
+                            background: `linear-gradient(to right, #06b6d4 0%, #06b6d4 ${((speed - 300) / 1700) * 100}%, #374151 ${((speed - 300) / 1700) * 100}%, #374151 100%)`
+                          }}
+                        />
+                        <div className="flex justify-between text-xs text-gray-400 mt-2">
+                          <span className="flex items-center gap-1">
+                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                            Fast
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                            Slow
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+                
+                {/* Action Buttons - Fixed at bottom */}
+                <div className="p-6 border-t border-gray-700/50 bg-gradient-to-t from-gray-900/95 to-transparent backdrop-blur-sm">
+                  <div className="space-y-3">
+                    <motion.button
+                      onClick={() => {
+                        startAnimation();
+                        setSidebarOpen(false);
+                      }}
+                      disabled={isAnimating}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-600 hover:from-cyan-400 hover:via-blue-400 hover:to-purple-500 disabled:opacity-50 disabled:cursor-not-allowed text-white py-4 px-6 rounded-xl text-lg font-bold transition-all flex items-center justify-center gap-3 shadow-lg hover:shadow-cyan-500/25 relative overflow-hidden group"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+                      <Play className="w-5 h-5 relative z-10" />
+                      <span className="relative z-10">
+                        {isAnimating ? 'Animation Running...' : 'Start Visualization'}
+                      </span>
+                    </motion.button>
+                    
+                    <div className="grid grid-cols-2 gap-3">
+                      <motion.button
+                        onClick={resetAnimation}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="bg-gray-700/80 hover:bg-gray-600/80 text-white py-3 px-4 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 border border-gray-600/50"
+                      >
+                        <RotateCcw className="w-4 h-4" />
+                        Reset
+                      </motion.button>
+                      
+                      <motion.button
+                        onClick={() => setSidebarOpen(false)}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="bg-gray-800/80 hover:bg-gray-700/80 text-gray-300 hover:text-white py-3 px-4 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 border border-gray-600/50"
+                      >
+                        <X className="w-4 h-4" />
+                        Close
+                      </motion.button>
                     </div>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-          
-          {/* BOTTOM SECTION: Three Panels Horizontally */}
-          <div className="grid lg:grid-cols-3 gap-4">
-            
-            {/* PANEL B: Code Execution (Left) */}
-            <div className="glass-card p-4">
-              {/* Language Selector */}
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Code className="w-4 h-4 text-cyan-400" />
-                  Code Execution
-                </h3>
-                <div className="flex gap-1 bg-gray-800 rounded-lg p-1">
-                  {['python', 'java', 'c'].map((lang) => (
-                    <button
-                      key={lang}
-                      onClick={() => setCodeLanguage(lang)}
-                      className={`px-2 py-1 rounded text-xs font-medium transition-all ${
-                        codeLanguage === lang
-                          ? 'bg-cyan-500 text-white'
-                          : 'text-gray-400 hover:text-white'
-                      }`}
-                    >
-                      {lang.toUpperCase()}
-                    </button>
-                  ))}
                 </div>
               </div>
-              
-              {/* Code Display */}
-              <div className="bg-gray-900/80 rounded-xl p-3 border border-gray-700/50 h-64 overflow-auto">
-                <div className="space-y-1">
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* FIXED LAYOUT - Everything Visible Simultaneously */}
+      <div className={`relative z-10 p-4 transition-all duration-300 ${sidebarOpen ? 'blur-sm pointer-events-none' : ''}`}>
+        <div className="max-w-[1600px] mx-auto">
+          
+          {/* THREE-PANEL SIMULTANEOUS VIEW */}
+          <div className="grid grid-cols-12 gap-4 h-[calc(100vh-200px)]">
+            
+            {/* LEFT PANEL: CODE EXECUTION (4 columns) */}
+            <div className="col-span-4 flex flex-col">
+              <div className="glass-card p-4 h-full flex flex-col">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <Code className="w-5 h-5 text-cyan-400" />
+                    Code ({codeLanguage.toUpperCase()})
+                  </h3>
+                  <div className="flex items-center gap-2 text-sm">
+                    <div className={`w-2 h-2 rounded-full ${isAnimating ? 'bg-green-400 animate-pulse' : 'bg-gray-500'}`} />
+                    <span className="text-white/70">{isAnimating ? 'Running' : 'Ready'}</span>
+                  </div>
+                </div>
+                
+                {/* Code Display with Real-time Highlighting */}
+                <div className="bg-gray-900/90 rounded-lg p-4 font-mono text-sm flex-1 overflow-auto">
                   {(codeTemplates[codeLanguage]?.[operation] || []).map((line, index) => (
                     <motion.div
-                      key={`${codeLanguage}-${operation}-${index}`}
-                      className={`
-                        py-1 px-2 rounded font-mono text-xs transition-all duration-300
-                        ${currentCodeLine === index
-                          ? 'bg-cyan-500/30 text-cyan-200 border-l-2 border-cyan-400'
-                          : 'text-green-400 hover:bg-white/5'
-                        }
-                      `}
+                      key={index}
+                      className={`py-1 px-2 rounded transition-all duration-300 ${
+                        currentCodeLine === index 
+                          ? 'bg-cyan-500/30 border-l-4 border-cyan-400 text-cyan-100 shadow-lg' 
+                          : 'text-gray-300 hover:bg-gray-800/50'
+                      }`}
                       animate={{
                         scale: currentCodeLine === index ? 1.02 : 1,
+                        x: currentCodeLine === index ? 8 : 0
                       }}
                     >
-                      <span className="text-gray-500 mr-2 select-none text-xs">{index + 1}</span>
+                      <span className="text-gray-500 mr-3 w-6 inline-block text-right">{index + 1}</span>
                       {line}
                     </motion.div>
-                  )) || []}
+                  ))}
+                </div>
+                
+                {/* Live Status */}
+                <div className="mt-3 p-3 bg-black/40 rounded-lg border border-cyan-500/30">
+                  <div className="text-cyan-400 text-sm font-medium mb-1">Live Status:</div>
+                  <div className="text-white text-sm">{animationStep}</div>
+                  {loopVariable && (
+                    <div className="text-yellow-400 text-xs mt-1">Loop: {loopVariable}</div>
+                  )}
                 </div>
               </div>
             </div>
             
-            {/* PANEL C: Array Canvas (Center) */}
-            <div className="glass-card p-4">
-              <div className="text-center mb-3">
-                <h3 className="text-lg font-bold text-white mb-1">Array Canvas</h3>
-                <div className="flex items-center justify-center gap-2 text-cyan-400 text-xs">
-                  <Activity className="w-3 h-3" />
-                  <span>{animationStep || 'Ready for operation'}</span>
+            {/* CENTER PANEL: ARRAY VISUALIZATION (5 columns) */}
+            <div className="col-span-5 flex flex-col">
+              <div className="glass-card p-4 h-full flex flex-col">
+                <div className="mb-3">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-cyan-400" />
+                    Array Visualization
+                    <span className="text-sm text-gray-400">({displayArray.length} elements)</span>
+                  </h3>
                 </div>
-              </div>
-              
-              {/* Array Visualization with Dynamic Sizing */}
-              <div className="flex items-center justify-center py-4 min-h-[200px]">
-                <div className="relative w-full max-w-full overflow-hidden">
-                  {/* Visual Cursor for Search Operations */}
-                  {cursorPosition >= 0 && operation === 'search' && (
-                    <motion.div
-                      className={`absolute -top-6 bg-cyan-500 rounded-full flex items-center justify-center shadow-lg ${
-                        displayArray.length <= 6 ? 'w-4 h-4' : 
-                        displayArray.length <= 8 ? 'w-3 h-3' : 'w-2 h-2'
-                      }`}
-                      animate={{ 
-                        x: cursorPosition * (displayArray.length <= 6 ? 64 : 
-                                            displayArray.length <= 8 ? 52 : 
-                                            displayArray.length <= 10 ? 44 : 36),
-                      }}
-                      transition={{ 
-                        type: "spring", 
-                        stiffness: 400, 
-                        damping: 30 
-                      }}
-                    >
-                      <Search className={`text-white ${
-                        displayArray.length <= 6 ? 'w-2 h-2' : 
-                        displayArray.length <= 8 ? 'w-1.5 h-1.5' : 'w-1 h-1'
-                      }`} />
-                    </motion.div>
-                  )}
-                  
-                  {/* Array Elements with Dynamic Sizing */}
-                  <div className={`flex justify-center items-center ${
-                    displayArray.length <= 6 ? 'gap-2' : 
-                    displayArray.length <= 8 ? 'gap-1.5' : 
-                    displayArray.length <= 10 ? 'gap-1' : 'gap-0.5'
-                  }`}>
-                    <AnimatePresence mode="popLayout">
-                      {displayArray.map((value, index) => {
-                        // Dynamic sizing based on array length
-                        const elementSize = displayArray.length <= 6 ? 'w-14 h-14' : 
-                                           displayArray.length <= 8 ? 'w-12 h-12' : 
-                                           displayArray.length <= 10 ? 'w-10 h-10' : 'w-8 h-8';
-                        const fontSize = displayArray.length <= 6 ? 'text-sm' : 
-                                        displayArray.length <= 8 ? 'text-xs' : 
-                                        displayArray.length <= 10 ? 'text-xs' : 'text-xs';
-                        const labelSize = displayArray.length <= 6 ? 'text-xs' : 'text-xs';
-                        const gapSize = displayArray.length <= 6 ? 64 : 
-                                       displayArray.length <= 8 ? 52 : 
-                                       displayArray.length <= 10 ? 44 : 36;
-                        
-                        return (
+                
+                {/* Array Elements - Responsive Grid */}
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="w-full max-w-full overflow-x-auto">
+                    <div className="flex justify-center items-center gap-3 p-4 min-w-max">
+                      <AnimatePresence mode="popLayout">
+                        {displayArray.map((value, index) => (
                           <motion.div
-                            key={`element-${index}-${value}`}
+                            key={`array-${index}-${value}`}
                             layout
-                            initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                            initial={{ opacity: 0, scale: 0.8, y: 20 }}
                             animate={{ 
                               opacity: elementStates[index] === 'deleting' ? 0.3 : 1,
-                              scale: currentElementIndex === index ? 1.1 : 1,
+                              scale: currentElementIndex === index ? 1.15 : 1,
                               y: 0,
-                              x: shiftingElements[index] ? (index < parseInt(insertIndex || deleteIndex || 0) ? gapSize : -gapSize) : 0,
+                              rotateY: currentElementIndex === index ? [0, 10, -10, 0] : 0
                             }}
-                            exit={{ opacity: 0, scale: 0.8, y: -10 }}
+                            exit={{ opacity: 0, scale: 0.8, y: -20 }}
                             transition={{ 
-                              duration: 0.6,
+                              duration: 0.5,
                               type: "spring",
                               stiffness: 300,
-                              damping: 25,
-                              layout: { duration: 0.8 }
+                              damping: 20
                             }}
                             className="relative flex flex-col items-center"
-                            onMouseEnter={(e) => showTooltip(`Value: ${value}, Index: ${index}, Memory: 0x${(baseMemoryAddress + index * 4).toString(16).toUpperCase()}`, e)}
-                            onMouseLeave={hideTooltip}
                           >
                             {/* Index label */}
-                            <div className={`text-white/60 font-mono mb-1 ${labelSize}`}>[{index}]</div>
+                            <div className="text-white/60 font-mono text-xs mb-1 font-semibold">
+                              [{index}]
+                            </div>
                             
-                            {/* Element box with dynamic sizing */}
-                            <motion.div
-                              animate={{
-                                scale: currentElementIndex === index ? 1.1 : 1,
-                                rotateY: currentElementIndex === index ? [0, 5, -5, 0] : 0,
-                              }}
-                              transition={{ duration: 0.3 }}
-                              className={`
-                                ${elementSize} rounded-lg flex items-center justify-center text-white font-bold ${fontSize}
-                                transition-all duration-500 border cursor-pointer
-                                ${getElementStyle(index)}
-                              `}
-                            >
-                              {value}
-                            </motion.div>
+                            {/* Element box */}
+                            <div className={getElementStyle(index)}>
+                              <span className="relative z-10 text-lg font-bold">{value}</span>
+                              
+                              {/* Current element indicator */}
+                              {currentElementIndex === index && (
+                                <motion.div
+                                  className="absolute -inset-1 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-xl"
+                                  animate={{ opacity: [0.5, 1, 0.5] }}
+                                  transition={{ duration: 1, repeat: Infinity }}
+                                />
+                              )}
+                            </div>
                             
-                            {/* Memory address label */}
-                            <div className={`text-white/40 font-mono mt-1 ${
-                              displayArray.length <= 8 ? 'text-xs' : 'text-xs'
-                            }`}>
-                              0x{(baseMemoryAddress + index * 4).toString(16).toUpperCase()}
+                            {/* Memory address */}
+                            <div className="text-white/40 font-mono text-xs mt-1">
+                              0x{(getBaseAddress() + index * 4).toString(16).toUpperCase()}
                             </div>
                           </motion.div>
-                        );
-                      })}
-                    </AnimatePresence>
+                        ))}
+                      </AnimatePresence>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              {/* Status display */}
-              <div className="text-center mt-3">
-                {foundIndex !== -1 && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="inline-flex items-center gap-1 bg-green-500/20 text-green-400 px-3 py-1 rounded-lg border border-green-500/30 text-xs"
-                  >
-                    <Search className="w-3 h-3" />
-                    <span className="font-semibold">Found at index {foundIndex}!</span>
-                  </motion.div>
-                )}
+                
+                {/* Operation Status */}
+                <div className="mt-3 text-center">
+                  {currentIteration >= 0 && operation === 'search' && (
+                    <div className="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-lg text-sm">
+                      Iteration {currentIteration + 1} of {displayArray.length}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
             
-            {/* PANEL D: Memory Layout (Right) */}
-            <div className="glass-card p-4">
-              <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-                <Cpu className="w-4 h-4 text-cyan-400" />
-                Memory Layout
-              </h3>
-              <p className="text-white/60 text-xs mb-4 leading-relaxed">
-                Real-time memory view showing contiguous storage.
-              </p>
+            {/* RIGHT PANEL: MEMORY LAYOUT (3 columns) */}
+            <div className="col-span-3 flex flex-col gap-4">
               
-              <div className="space-y-2 max-h-64 overflow-auto">
-                <AnimatePresence mode="popLayout">
-                  {memoryArray.map((value, index) => (
-                    <motion.div
-                      key={`memory-${index}-${value}`}
-                      layout
-                      initial={{ opacity: 0, x: 10 }}
-                      animate={{ 
-                        opacity: elementStates[index] === 'deleting' ? 0.3 : 1,
-                        x: 0,
-                        scale: currentMemoryIndex === index ? 1.02 : 1
-                      }}
-                      exit={{ opacity: 0, x: -10 }}
-                      transition={{ 
-                        duration: 0.3,
-                        layout: { duration: 0.6 }
-                      }}
-                      className={`
-                        flex justify-between items-center p-2 rounded-lg border transition-all duration-500
-                        ${getMemoryStyle(index)}
-                      `}
-                      onMouseEnter={(e) => showTooltip(`Memory: 0x${(baseMemoryAddress + index * 4).toString(16).toUpperCase()}, Value: ${value}, Index: ${index}`, e)}
-                      onMouseLeave={hideTooltip}
-                    >
-                      <div className="flex items-center gap-2">
-                        <div className="text-cyan-400 font-mono text-xs font-bold">
-                          0x{(baseMemoryAddress + index * 4).toString(16).toUpperCase()}
+              {/* Stack Memory */}
+              <div className="glass-card p-3 flex-1">
+                <h4 className="text-md font-bold text-white mb-2 flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-green-400" />
+                  Stack Memory
+                </h4>
+                <div className="space-y-2">
+                  {stackMemory.map((frame, index) => (
+                    <div key={index} className="bg-green-500/10 border border-green-500/30 rounded-lg p-2">
+                      <div className="text-green-300 text-sm font-semibold mb-1">{frame.name}</div>
+                      {Object.entries(frame.variables).map(([name, type]) => (
+                        <div key={name} className="text-xs text-gray-300 flex justify-between">
+                          <span>{name}:</span>
+                          <span className="text-green-400">{type}</span>
                         </div>
-                        <div className="text-white/40 text-xs">
-                          [{index}]
+                      ))}
+                      {currentStackFrame && (
+                        <div className="mt-1 pt-1 border-t border-green-500/20">
+                          <div className="text-xs text-yellow-300">
+                            i = {currentStackFrame.i || 0}
+                          </div>
+                          {currentStackFrame.currentValue && (
+                            <div className="text-xs text-cyan-300">
+                              current = {currentStackFrame.currentValue}
+                            </div>
+                          )}
                         </div>
-                      </div>
-                      <div className={`
-                        px-2 py-1 rounded font-bold text-xs transition-all duration-300
-                        ${currentMemoryIndex === index || elementStates[index] === 'examining' || elementStates[index] === 'found' || elementStates[index] === 'inserted' || elementStates[index] === 'accessed'
-                          ? 'bg-cyan-500 text-white shadow-lg'
-                          : elementStates[index] === 'shifting' || shiftingElements[index]
-                          ? 'bg-yellow-500 text-white'
-                          : elementStates[index] === 'deleting'
-                          ? 'bg-red-500/50 text-red-200'
-                          : 'bg-purple-500/20 text-purple-300'
-                        }
-                      `}>
-                        {value}
-                      </div>
-                    </motion.div>
+                      )}
+                    </div>
                   ))}
-                </AnimatePresence>
+                </div>
               </div>
               
-              <div className="mt-4 p-2 bg-black/20 rounded-lg">
-                <div className="text-xs text-white/50 space-y-1">
-                  <div><strong>Base:</strong> 0x{baseMemoryAddress.toString(16).toUpperCase()}</div>
-                  <div><strong>Size:</strong> 4 bytes per element</div>
-                  <div><strong>Total:</strong> {memoryArray.length * 4} bytes</div>
+              {/* Heap Memory */}
+              <div className="glass-card p-3 flex-1">
+                <h4 className="text-md font-bold text-white mb-2 flex items-center gap-2">
+                  <Database className="w-4 h-4 text-purple-400" />
+                  Heap Memory
+                </h4>
+                <div className="space-y-2">
+                  {Object.entries(heapMemory).map(([key, obj]) => (
+                    <div key={key} className="bg-purple-500/10 border border-purple-500/30 rounded-lg p-2">
+                      <div className="text-purple-300 text-sm font-semibold mb-1">{obj.type}</div>
+                      <div className="text-xs text-gray-400 mb-1">
+                        {obj.address.toString(16).toUpperCase()}
+                      </div>
+                      <div className="grid grid-cols-2 gap-1">
+                        {obj.data.slice(0, 6).map((val, idx) => (
+                          <div 
+                            key={idx} 
+                            className={`text-xs p-1 rounded text-center ${
+                              currentMemoryIndex === idx 
+                                ? 'bg-purple-500 text-white' 
+                                : 'bg-purple-500/20 text-purple-200'
+                            }`}
+                          >
+                            {val}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Memory Stats */}
+              <div className="glass-card p-3">
+                <h4 className="text-sm font-bold text-white mb-2">Memory Stats</h4>
+                <div className="space-y-1 text-xs text-gray-300">
+                  <div className="flex justify-between">
+                    <span>Array Size:</span>
+                    <span className="text-cyan-400">{displayArray.length * 4} bytes</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Elements:</span>
+                    <span className="text-white">{displayArray.length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Language:</span>
+                    <span className="text-yellow-400">{codeLanguage.toUpperCase()}</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Tooltip */}
+      <AnimatePresence>
+        {tooltip.show && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="fixed z-50 bg-black/90 text-white px-3 py-2 rounded-lg text-sm pointer-events-none"
+            style={{ left: tooltip.x, top: tooltip.y - 40 }}
+          >
+            {tooltip.content}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
