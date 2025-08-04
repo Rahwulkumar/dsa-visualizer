@@ -31,10 +31,17 @@ const ArrayVisualizerPage = () => {
   const navigate = useNavigate();
   
   // Enhanced state management for TRUE visual movement animation
-  const [arraySize, setArraySize] = useState(8); // User-configurable array size
-  const [originalArray, setOriginalArray] = useState([42, 17, 89, 23, 56, 91, 34, 78]);
-  const [displayArray, setDisplayArray] = useState([42, 17, 89, 23, 56, 91, 34, 78]); 
-  const [memoryArray, setMemoryArray] = useState([42, 17, 89, 23, 56, 91, 34, 78]);
+  const [arraySize, setArraySize] = useState(3); // User-configurable array size
+  const [originalArray, setOriginalArray] = useState([42, 17, 89]);
+  const [displayArray, setDisplayArray] = useState([42, 17, 89]); 
+  const [memoryArray, setMemoryArray] = useState([42, 17, 89]);
+  
+  // NEW: Real-time visualization state management
+  const [visualArrayState, setVisualArrayState] = useState([42, 17, 89]); // The array that is actually rendered
+  const [animationSteps, setAnimationSteps] = useState([]); // Queue of intermediate states for step-by-step animation
+  const [currentStepIndex, setCurrentStepIndex] = useState(0); // Current step index during animation
+  const [isStepAnimating, setIsStepAnimating] = useState(false); // Controls step-by-step animation flow
+  
   const [operation, setOperation] = useState('search');
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(1000);
@@ -50,7 +57,9 @@ const ArrayVisualizerPage = () => {
   const [elementStates, setElementStates] = useState({});
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationStep, setAnimationStep] = useState('Ready to start...');
-  const [foundIndex, setFoundIndex] = useState(-1);
+  const [foundIndex, setFoundIndex] = useState(null);
+  const [accessedValue, setAccessedValue] = useState(null); // Track accessed value for status display
+  const [insertedElement, setInsertedElement] = useState(null); // Track inserted element for status display
   
   // Enhanced memory visualization
   const [heapMemory, setHeapMemory] = useState({});
@@ -118,47 +127,73 @@ const ArrayVisualizerPage = () => {
     }
   }, [codeLanguage, arraySize, displayArray]);
 
-  // Get element style based on state
+  // Get element style based on state with enhanced complementary colors
   const getElementStyle = (index) => {
     const state = elementStates[index];
-    let className = "relative w-16 h-16 rounded-xl flex items-center justify-center transition-all duration-500 border-2 cursor-pointer ";
+    
+    // Dynamic sizing based on array length for better visualization
+    const arrayLength = visualArrayState.length;
+    let sizeClasses = "";
+    if (arrayLength <= 6) {
+      sizeClasses = "w-16 h-16";
+    } else if (arrayLength <= 8) {
+      sizeClasses = "w-14 h-14";
+    } else if (arrayLength <= 10) {
+      sizeClasses = "w-12 h-12";
+    } else {
+      sizeClasses = "w-10 h-10";
+    }
+    
+    let className = `relative ${sizeClasses} rounded-xl flex items-center justify-center transition-all duration-500 border-2 cursor-pointer `;
     
     switch(state) {
       case 'checking':
-        className += "bg-blue-500/30 border-blue-400 text-blue-100 scale-110 shadow-lg shadow-blue-500/50";
+        className += "bg-gradient-to-br from-blue-500/40 to-indigo-600/40 border-blue-400 text-blue-50 scale-110 shadow-lg shadow-blue-500/60";
+        break;
+      case 'examining':
+        className += "bg-gradient-to-br from-yellow-500/40 to-amber-600/40 border-yellow-400 text-yellow-50 scale-110 shadow-lg shadow-yellow-500/60 animate-pulse";
+        break;
+      case 'notMatch':
+        className += "bg-gradient-to-br from-red-500/40 to-rose-600/40 border-red-400 text-red-50 scale-105 shadow-lg shadow-red-500/60";
         break;
       case 'found':
-        className += "bg-green-500/30 border-green-400 text-green-100 scale-110 shadow-lg shadow-green-500/50 animate-pulse";
+        className += "bg-gradient-to-br from-emerald-500/40 to-green-600/40 border-emerald-400 text-emerald-50 scale-110 shadow-lg shadow-emerald-500/60 animate-pulse";
         break;
       case 'checked':
-        className += "bg-red-500/20 border-red-400/50 text-red-200";
+        className += "bg-gradient-to-br from-slate-500/30 to-gray-600/30 border-slate-400/50 text-slate-200 opacity-60";
         break;
       case 'accessing':
-        className += "bg-cyan-500/30 border-cyan-400 text-cyan-100 scale-110 shadow-lg shadow-cyan-500/50";
+        className += "bg-gradient-to-br from-cyan-500/40 to-teal-600/40 border-cyan-400 text-cyan-50 scale-110 shadow-lg shadow-cyan-500/60";
         break;
       case 'accessed':
-        className += "bg-cyan-500/30 border-cyan-400 text-cyan-100 shadow-lg shadow-cyan-500/50";
+        className += "bg-gradient-to-br from-cyan-500/40 to-teal-600/40 border-cyan-400 text-cyan-50 shadow-lg shadow-cyan-500/60";
         break;
       case 'shifting':
-        className += "bg-yellow-500/30 border-yellow-400 text-yellow-100 scale-105 shadow-lg shadow-yellow-500/50";
+        className += "bg-gradient-to-br from-amber-500/40 to-orange-600/40 border-amber-400 text-amber-50 scale-105 shadow-lg shadow-amber-500/60";
         break;
       case 'moved':
-        className += "bg-purple-500/30 border-purple-400 text-purple-100";
+        className += "bg-gradient-to-br from-violet-500/40 to-purple-600/40 border-violet-400 text-violet-50 shadow-md";
         break;
       case 'inserted':
-        className += "bg-green-500/30 border-green-400 text-green-100 scale-110 shadow-lg shadow-green-500/50 animate-pulse";
+        className += "bg-gradient-to-br from-emerald-500/40 to-green-600/40 border-emerald-400 text-emerald-50 scale-110 shadow-lg shadow-emerald-500/60 animate-pulse";
         break;
       case 'toDelete':
-        className += "bg-red-500/30 border-red-400 text-red-100 scale-110 shadow-lg shadow-red-500/50";
+        className += "bg-gradient-to-br from-red-500/40 to-rose-600/40 border-red-400 text-red-50 scale-110 shadow-lg shadow-red-500/60 animate-pulse";
         break;
       case 'deleting':
-        className += "bg-red-500/30 border-red-400 text-red-100 opacity-30 scale-90";
+        className += "bg-gradient-to-br from-red-500/30 to-rose-600/30 border-red-400 text-red-100 opacity-30 scale-90";
+        break;
+      case 'receiving':
+        className += "bg-gradient-to-br from-indigo-500/40 to-blue-600/40 border-indigo-400 text-indigo-50 scale-105 shadow-lg shadow-indigo-500/50";
+        break;
+      case 'shifted':
+        className += "bg-gradient-to-br from-purple-500/40 to-indigo-600/40 border-purple-400 text-purple-50 shadow-md";
         break;
       default:
         if (index === currentElementIndex) {
-          className += "bg-blue-500/20 border-blue-400/70 text-blue-100 scale-105";
+          className += "bg-gradient-to-br from-blue-500/40 to-cyan-600/40 border-blue-400/70 text-blue-50 scale-105 shadow-lg shadow-blue-400/50";
         } else {
-          className += "bg-white/10 border-white/30 text-white hover:bg-white/20 hover:scale-105";
+          className += "bg-gradient-to-br from-indigo-600/60 to-purple-700/60 border-indigo-400/50 text-white hover:from-indigo-500/70 hover:to-purple-600/70 hover:border-indigo-300/60 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/30";
         }
         break;
     }
@@ -171,14 +206,14 @@ const ArrayVisualizerPage = () => {
     initializeMemoryModel();
   }, [initializeMemoryModel]);
 
-  // Initialize array based on size
+  // NEW: Initialize visualization state on component mount
   useEffect(() => {
-    generateNewArray();
-  }, [arraySize]);
-
-  // Ensure page starts at top on mount
-  useEffect(() => {
-    window.scrollTo(0, 0);
+    // Ensure initial array is always rendered, preventing blank screen
+    const initialArray = [42, 17, 89];
+    setVisualArrayState([...initialArray]);
+    setOriginalArray([...initialArray]);
+    setDisplayArray([...initialArray]);
+    setMemoryArray([...initialArray]);
   }, []);
 
   // Initialize array based on size
@@ -196,10 +231,20 @@ const ArrayVisualizerPage = () => {
     const newArray = Array.from({ length: arraySize }, () => 
       Math.floor(Math.random() * 99) + 1
     );
+    
+    // Set all arrays to the new array first
     setOriginalArray(newArray);
     setDisplayArray([...newArray]);
     setMemoryArray([...newArray]);
-    resetAnimation();
+    setVisualArrayState([...newArray]);
+    
+    // Clear animation states
+    setAnimationSteps([]);
+    setCurrentStepIndex(0);
+    setIsStepAnimating(false);
+    
+    // Reset animation UI states
+    clearAnimationStates();
   };
 
   // Multi-language code templates with enhanced detail
@@ -343,7 +388,88 @@ const ArrayVisualizerPage = () => {
   // Sleep function for animation timing
   const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-  // Reset all animation states
+  // NEW: Core animation operation controller for step-by-step visualization
+  const animateOperation = async (steps) => {
+    if (!steps || steps.length === 0) {
+      console.warn('No animation steps provided');
+      return;
+    }
+
+    setIsStepAnimating(true);
+    setAnimationSteps(steps);
+    setCurrentStepIndex(0);
+
+    try {
+      for (let i = 0; i < steps.length; i++) {
+        if (!isPlaying) break; // Allow early termination
+
+        const step = steps[i];
+        setCurrentStepIndex(i);
+        setAnimationStep(step.description || `Step ${i + 1}`);
+
+        // Update visual array state if step contains array changes
+        if (step.visualArray) {
+          setVisualArrayState([...step.visualArray]);
+        }
+
+        // Update element states for visual feedback
+        if (step.elementStates) {
+          setElementStates(step.elementStates);
+        }
+
+        // Update current element index for highlighting
+        if (typeof step.currentElementIndex !== 'undefined') {
+          setCurrentElementIndex(step.currentElementIndex);
+        }
+
+        // Update code line highlighting
+        if (typeof step.codeLineIndex !== 'undefined') {
+          setCurrentCodeLine(step.codeLineIndex);
+        }
+
+        // Wait for the specified duration or default speed
+        await sleep(step.duration || speed);
+      }
+    } catch (error) {
+      console.error('Animation error:', error);
+    } finally {
+      setIsStepAnimating(false);
+      setCurrentStepIndex(0);
+    }
+  };
+
+  /* 
+   * USAGE EXAMPLE for animateOperation:
+   * 
+   * const exampleInsertSteps = [
+   *   {
+   *     description: "Starting insertion at index 2",
+   *     visualArray: [1, 2, 3, 4, 5],
+   *     currentElementIndex: 2,
+   *     codeLineIndex: 0,
+   *     duration: 1000
+   *   },
+   *   {
+   *     description: "Shifting elements right",
+   *     visualArray: [1, 2, null, 3, 4, 5],
+   *     elementStates: { 2: 'shifting', 3: 'shifting', 4: 'shifting' },
+   *     codeLineIndex: 1,
+   *     duration: 1500
+   *   },
+   *   {
+   *     description: "Inserting new value 99",
+   *     visualArray: [1, 2, 99, 3, 4, 5],
+   *     elementStates: { 2: 'inserted' },
+   *     currentElementIndex: 2,
+   *     codeLineIndex: 2,
+   *     duration: 1000
+   *   }
+   * ];
+   * 
+   * To use: await animateOperation(exampleInsertSteps);
+   */
+
+  // Reset all animation states and sync all arrays with current visualArrayState
   const resetAnimation = () => {
     setIsPlaying(false);
     setIsAnimating(false);
@@ -356,9 +482,45 @@ const ArrayVisualizerPage = () => {
     setShiftingElements({});
     setLoopIteration(0);
     setAnimationStep('Ready for operation');
-    setFoundIndex(-1);
-    setDisplayArray([...originalArray]);
-    setMemoryArray([...originalArray]);
+    setFoundIndex(null);
+    
+    // Sync all arrays with the current visualArrayState (don't reset to originalArray)
+    setDisplayArray([...visualArrayState]);
+    setMemoryArray([...visualArrayState]);
+    setOriginalArray([...visualArrayState]);
+    
+    // Reset animation step tracking
+    setAnimationSteps([]);
+    setCurrentStepIndex(0);
+    setIsStepAnimating(false);
+    
+    if (animationRef.current) {
+      clearTimeout(animationRef.current);
+    }
+  };
+
+  // Clear only animation states, keep array data intact
+  const clearAnimationStates = () => {
+    setIsPlaying(false);
+    setIsAnimating(false);
+    setCurrentElementIndex(-1);
+    setCurrentCodeLine(-1);
+    setCurrentMemoryIndex(-1);
+    setElementStates({});
+    setMovingElements({});
+    setCursorPosition(-1);
+    setShiftingElements({});
+    setLoopIteration(0);
+    setAnimationStep('Ready for operation');
+    setFoundIndex(null);
+    setAccessedValue(null); // Clear accessed value
+    setInsertedElement(null); // Clear inserted element
+    
+    // Keep visualArrayState intact - don't reset it
+    setAnimationSteps([]);
+    setCurrentStepIndex(0);
+    setIsStepAnimating(false);
+    
     if (animationRef.current) {
       clearTimeout(animationRef.current);
     }
@@ -372,7 +534,19 @@ const ArrayVisualizerPage = () => {
       return;
     }
 
-    setAnimationStep('Starting linear search...');
+    // Clear any previous element states and ensure we start fresh
+    setElementStates({});
+    setFoundIndex(null); // Use null to indicate search hasn't run yet
+    setIsAnimating(true); // Ensure animation is active
+    
+    // DEBUG: Log array and target for debugging
+    console.log('=== SEARCH DEBUG ===');
+    console.log('Target:', target, 'Type:', typeof target);
+    console.log('Array:', visualArrayState);
+    console.log('Array types:', visualArrayState.map(val => `${val}(${typeof val})`));
+    console.log('==================');
+    
+    setAnimationStep(`Starting linear search for target value: ${target}`);
     setCurrentCodeLine(0); // Function definition
     await sleep(speed * 0.5);
     
@@ -381,139 +555,220 @@ const ArrayVisualizerPage = () => {
     await sleep(speed * 0.7);
     
     // TRUE step-by-step search - each element individually
-    for (let i = 0; i < displayArray.length; i++) {
-      if (!isPlaying) break;
+    for (let i = 0; i < visualArrayState.length; i++) {
+      // Remove the isPlaying check that was causing issues
       
       // Highlight current loop iteration
       setCurrentCodeLine(1);
       setCurrentElementIndex(i);
       setCurrentMemoryIndex(i);
-      setAnimationStep(`Checking element at index ${i}`);
+      setAnimationStep(`Loop iteration ${i + 1}: Examining element at index ${i}`);
       
-      // Show element being examined (blue highlight)
+      // Show element being examined with yellow highlight
       setElementStates(prev => ({ ...prev, [i]: 'examining' }));
       await sleep(speed * 0.8);
       
       // Highlight the if condition
       setCurrentCodeLine(2);
-      setAnimationStep(`Comparing ${displayArray[i]} with target ${target}`);
-      await sleep(speed * 0.6);
+      const currentElement = visualArrayState[i];
+      const currentElementAsNum = parseInt(currentElement);
       
-      // Check if it's a match
-      if (displayArray[i] === target) {
+      // DEBUG: Log comparison details
+      console.log(`Comparing index ${i}: element="${currentElement}" (${typeof currentElement}) vs target="${target}" (${typeof target})`);
+      console.log(`As numbers: ${currentElementAsNum} === ${target} ? ${currentElementAsNum === target}`);
+      
+      setAnimationStep(`Comparing element ${currentElement} with target ${target}`);
+      await sleep(speed * 0.8);
+      
+      // Check if it's a match - using parseInt to ensure number comparison
+      if (currentElementAsNum === target) {
         // FOUND! Highlight return statement
+        console.log(`✅ MATCH FOUND at index ${i}!`);
         setCurrentCodeLine(3);
         setElementStates(prev => ({ ...prev, [i]: 'found' }));
-        setFoundIndex(i);
-        setAnimationStep(`Target found at index ${i}!`);
+        setFoundIndex(i); // Set the actual found index
+        setAnimationStep(`✅ Target ${target} found at index ${i}! Returning ${i}.`);
         await sleep(speed * 1.5);
-        return;
+        
+        // Keep the found element highlighted and finish
+        setCurrentElementIndex(i);
+        setCurrentCodeLine(3); // Keep highlighting the return line
+        return; // Exit the function, keeping foundIndex = i
       } else {
-        // Not a match - show red briefly then fade
+        // Not a match - show red briefly to indicate mismatch
+        console.log(`❌ No match: ${currentElementAsNum} !== ${target}`);
         setElementStates(prev => ({ ...prev, [i]: 'notMatch' }));
-        await sleep(speed * 0.4);
+        setAnimationStep(`❌ Element ${currentElement} ≠ ${target}, continuing search...`);
+        await sleep(speed * 0.6);
+        
+        // Mark as checked (grayed out)
         setElementStates(prev => ({ ...prev, [i]: 'checked' }));
-        await sleep(speed * 0.3);
+        await sleep(speed * 0.4);
       }
     }
     
-    // Not found
-    setCurrentCodeLine(6);
-    setAnimationStep('Target not found in array');
+    // Not found - highlight the return -1 line
+    console.log('❌ Search completed - target not found');
+    setCurrentCodeLine(4); // Line index 4 is "    return -1" in Python template
+    setAnimationStep(`❌ Target ${target} not found in array. Returning -1.`);
     setCurrentElementIndex(-1);
     setCurrentMemoryIndex(-1);
-    await sleep(speed);
+    setFoundIndex(-1); // Set to -1 only when not found
+    await sleep(speed * 1.2);
   };
 
-  // TRUE STEP-BY-STEP INSERT ANIMATION
+  // TRUE STEP-BY-STEP INSERT ANIMATION WITH PROPER SHIFTING
   const animateInsert = async () => {
     const index = parseInt(insertIndex);
     const value = parseInt(insertValue);
     
-    if (isNaN(index) || isNaN(value) || index < 0 || index > displayArray.length) {
-      alert(`Please enter valid index (0 to ${displayArray.length}) and value`);
+    if (isNaN(index) || isNaN(value) || index < 0 || index > visualArrayState.length) {
+      alert(`Please enter valid index (0 to ${visualArrayState.length}) and value`);
       return;
     }
 
+    // Clear any previous element states and ensure we start fresh
+    setElementStates({});
+    setInsertedElement(null); // Clear any previous inserted element
+    setIsAnimating(true); // Ensure animation is active
+    
+    // DEBUG: Log insert operation details
+    console.log('=== INSERT DEBUG ===');
+    console.log('Index:', index, 'Value:', value);
+    console.log('Current Array:', visualArrayState);
+    console.log('Array length before:', visualArrayState.length);
+    console.log('==================');
+    
     setAnimationStep('Starting insertion operation...');
     setCurrentCodeLine(0); // Function definition
     await sleep(speed * 0.5);
     
-    // Show insertion marker
+    // Show insertion point
     setCurrentElementIndex(index);
     setCurrentMemoryIndex(index);
-    setAnimationStep(`Preparing to insert ${value} at index ${index}`);
+    setAnimationStep(`Preparing to insert value ${value} at index ${index}`);
     await sleep(speed * 0.8);
     
-    setCurrentCodeLine(1); // Comment about shifting
-    setAnimationStep('Need to create space by shifting elements right');
+    setCurrentCodeLine(1); // Comment about expanding array
+    setAnimationStep('First, we need to expand the array by one element');
     await sleep(speed * 0.7);
     
+    // Step 1: Create expanded array with the new element at the end initially
+    const expandedArray = [...visualArrayState, null];
+    setVisualArrayState([...expandedArray]);
+    setDisplayArray([...expandedArray]);
+    setMemoryArray([...memoryArray, null]);
+    
+    // Show the new expanded array with placeholder
+    setElementStates(prev => ({ ...prev, [expandedArray.length - 1]: 'receiving' }));
+    setAnimationStep(`Array expanded to ${expandedArray.length} elements with placeholder`);
+    await sleep(speed * 0.8);
+    
     setCurrentCodeLine(2); // For loop for shifting
-    setAnimationStep('Starting shift operation from the end...');
-    await sleep(speed * 0.6);
+    setAnimationStep('Now shifting elements right to make space...');
+    await sleep(speed * 0.7);
     
-    // TRUE step-by-step shifting - ONE element at a time
-    const newDisplayArray = [...displayArray];
-    const newMemoryArray = [...memoryArray];
-    
-    for (let i = displayArray.length - 1; i >= index; i--) {
-      if (!isPlaying) break;
+    // Step 2: Shift elements one by one from right to left (FIXED VERSION)
+    // Start from the last actual element and work backwards to the insertion point
+    for (let i = expandedArray.length - 2; i >= index; i--) {
+      // Remove the problematic isPlaying check that was causing early termination
       
       setCurrentCodeLine(3); // Array assignment line
       setCurrentElementIndex(i);
       setCurrentMemoryIndex(i);
-      setElementStates(prev => ({ ...prev, [i]: 'shifting' }));
-      setAnimationStep(`Shifting element ${displayArray[i]} from index ${i} to ${i + 1}`);
       
-      // Visual shift - element moves right
-      await sleep(speed * 0.4);
+      // Show current element being moved
+      setElementStates(prev => ({ 
+        ...prev, 
+        [i]: 'shifting',
+        [i + 1]: 'receiving'
+      }));
       
-      // Update both display and memory arrays step by step
-      if (i === displayArray.length - 1) {
-        // Adding new element at the end
-        newDisplayArray.push(displayArray[i]);
-        newMemoryArray.push(memoryArray[i]);
-      } else {
-        // Shifting existing element
-        newDisplayArray[i + 1] = displayArray[i];
-        newMemoryArray[i + 1] = memoryArray[i];
-      }
-      
-      setDisplayArray([...newDisplayArray]);
-      setMemoryArray([...newMemoryArray]);
-      setElementStates(prev => ({ ...prev, [i]: 'shifted', [i + 1]: 'shifted' }));
+      const elementToMove = expandedArray[i];
+      setAnimationStep(`Moving element ${elementToMove} from index ${i} to index ${i + 1}`);
       
       await sleep(speed * 0.6);
+      
+      // Actually move the element - CRITICAL FIX
+      expandedArray[i + 1] = expandedArray[i];
+      
+      // Update all state arrays immediately to reflect the change
+      setVisualArrayState([...expandedArray]);
+      setDisplayArray([...expandedArray]);
+      setMemoryArray(prev => {
+        const newMem = [...prev];
+        newMem[i + 1] = newMem[i];
+        return newMem;
+      });
+      
+      // Show element has been moved
+      setElementStates(prev => ({ 
+        ...prev, 
+        [i]: 'shifted',
+        [i + 1]: 'moved'
+      }));
+      setAnimationStep(`Element ${expandedArray[i + 1]} successfully moved to index ${i + 1}`);
+      
+      console.log(`Shifted element from ${i} to ${i + 1}:`, expandedArray[i + 1]);
+      await sleep(speed * 0.4);
     }
     
-    // Insert the new element
-    setCurrentCodeLine(5); // Comment about insertion
-    setAnimationStep('Space created, now inserting new element...');
+    // Step 3: Clear the target position and show it's ready for insertion
+    setElementStates(prev => ({ ...prev, [index]: 'receiving' }));
+    setAnimationStep(`Space created at index ${index}, ready for insertion`);
+    await sleep(speed * 0.6);
+    
+    // Step 4: Insert the new element
+    setCurrentCodeLine(4); // Comment about insertion
+    setAnimationStep('Now inserting the new element...');
     await sleep(speed * 0.5);
     
-    setCurrentCodeLine(6); // Actual insertion line
-    newDisplayArray[index] = value;
-    newMemoryArray[index] = value;
-    setDisplayArray([...newDisplayArray]);
-    setMemoryArray([...newMemoryArray]);
-    setOriginalArray([...newDisplayArray]);
+    setCurrentCodeLine(5); // Actual insertion line
+    expandedArray[index] = value;
     
+    // Update all state arrays with the final result
+    setVisualArrayState([...expandedArray]);
+    setDisplayArray([...expandedArray]);
+    setMemoryArray(prev => {
+      const newMem = [...prev];
+      newMem[index] = value;
+      return newMem;
+    });
+    setOriginalArray([...expandedArray]); // Update originalArray to match visualArrayState
+    
+    // Set the inserted element for live status tracking
+    setInsertedElement({ value: value, index: index });
+    
+    // Highlight the newly inserted element
     setElementStates(prev => ({ ...prev, [index]: 'inserted' }));
-    setAnimationStep(`Successfully inserted ${value} at index ${index}`);
-    await sleep(speed);
+    setCurrentElementIndex(index);
+    setAnimationStep(`✅ Successfully inserted ${value} at index ${index}!`);
+    
+    // DEBUG: Log final result
+    console.log('Final array after insertion:', expandedArray);
+    console.log('Array length after:', expandedArray.length);
+    
+    await sleep(speed * 1.2);
+    
+    // Step 5: Clear all element states to show final result
+    setTimeout(() => {
+      setElementStates({});
+      setCurrentElementIndex(-1);
+      setCurrentMemoryIndex(-1);
+      setAnimationStep(`Insertion complete. Array now has ${expandedArray.length} elements.`);
+    }, speed * 0.5);
   };
 
   // TRUE STEP-BY-STEP DELETE ANIMATION  
   const animateDelete = async () => {
     const index = parseInt(deleteIndex);
     
-    if (isNaN(index) || index < 0 || index >= displayArray.length) {
-      alert(`Please enter valid index (0 to ${displayArray.length - 1})`);
+    if (isNaN(index) || index < 0 || index >= visualArrayState.length) {
+      alert(`Please enter valid index (0 to ${visualArrayState.length - 1})`);
       return;
     }
 
-    const deletedValue = displayArray[index];
+    const deletedValue = visualArrayState[index];
     setAnimationStep('Starting deletion operation...');
     setCurrentCodeLine(0); // Function definition
     await sleep(speed * 0.5);
@@ -537,10 +792,11 @@ const ArrayVisualizerPage = () => {
     setCurrentCodeLine(2); // For loop for shifting
     
     // TRUE step-by-step left shifting - ONE element at a time
-    const newDisplayArray = [...displayArray];
+    const newVisualArray = [...visualArrayState];
+    const newDisplayArray = [...visualArrayState];
     const newMemoryArray = [...memoryArray];
     
-    for (let i = index; i < displayArray.length - 1; i++) {
+    for (let i = index; i < visualArrayState.length - 1; i++) {
       if (!isPlaying) break;
       
       setCurrentCodeLine(3); // Array assignment line
@@ -551,13 +807,15 @@ const ArrayVisualizerPage = () => {
         [i + 1]: 'shifting',
         [i]: 'receiving'
       }));
-      setAnimationStep(`Moving element ${displayArray[i + 1]} from index ${i + 1} to ${i}`);
+      setAnimationStep(`Moving element ${visualArrayState[i + 1]} from index ${i + 1} to ${i}`);
       
       await sleep(speed * 0.4);
       
       // Update arrays step by step
-      newDisplayArray[i] = displayArray[i + 1];
+      newVisualArray[i] = visualArrayState[i + 1];
+      newDisplayArray[i] = visualArrayState[i + 1];
       newMemoryArray[i] = memoryArray[i + 1];
+      setVisualArrayState([...newVisualArray]);
       setDisplayArray([...newDisplayArray]);
       setMemoryArray([...newMemoryArray]);
       
@@ -571,11 +829,13 @@ const ArrayVisualizerPage = () => {
     await sleep(speed * 0.5);
     
     setCurrentCodeLine(6); // Array length reduction
+    newVisualArray.pop();
     newDisplayArray.pop();
     newMemoryArray.pop();
+    setVisualArrayState([...newVisualArray]);
     setDisplayArray([...newDisplayArray]);
     setMemoryArray([...newMemoryArray]);
-    setOriginalArray([...newDisplayArray]);
+    setOriginalArray([...newVisualArray]); // Sync with visualArrayState
     
     setAnimationStep(`Successfully deleted ${deletedValue}`);
     await sleep(speed);
@@ -584,33 +844,78 @@ const ArrayVisualizerPage = () => {
   // TRUE STEP-BY-STEP ACCESS ANIMATION
   const animateAccess = async () => {
     const index = parseInt(accessIndex);
-    if (isNaN(index) || index < 0 || index >= displayArray.length) {
-      alert(`Please enter valid index (0 to ${displayArray.length - 1})`);
+    
+    // Clear any previous element states and result
+    setElementStates({});
+    setAccessedValue(null);
+    
+    // Comprehensive input validation
+    if (isNaN(index)) {
+      alert('Please enter a valid numeric index');
+      return;
+    }
+    
+    if (index < 0) {
+      alert(`Invalid index: ${index}. Index cannot be negative.`);
+      setAccessedValue(`Error: Index ${index} is negative`);
+      setAnimationStep(`❌ Error: Index ${index} is out of bounds (negative)`);
+      return;
+    }
+    
+    if (index >= visualArrayState.length) {
+      alert(`Invalid index: ${index}. Index must be between 0 and ${visualArrayState.length - 1}.`);
+      setAccessedValue(`Error: Index ${index} out of bounds`);
+      setAnimationStep(`❌ Error: Index ${index} is out of bounds (≥ ${visualArrayState.length})`);
       return;
     }
 
-    setAnimationStep('Starting access operation...');
+    // DEBUG: Log access operation details
+    console.log('=== ACCESS DEBUG ===');
+    console.log('Index:', index, 'Type:', typeof index);
+    console.log('Array:', visualArrayState);
+    console.log('Array length:', visualArrayState.length);
+    console.log('==================');
+
+    setIsAnimating(true); // Ensure animation is active
+    setAnimationStep('Starting direct array access operation...');
     setCurrentCodeLine(0); // Function definition
     await sleep(speed * 0.5);
     
-    setCurrentCodeLine(1); // Comment about bounds checking
-    setAnimationStep('Checking if index is within bounds...');
+    setCurrentCodeLine(1); // Comment about bounds checking  
+    setAnimationStep('Performing bounds check validation...');
     await sleep(speed * 0.7);
     
-    setCurrentCodeLine(2); // Bounds check condition
-    setAnimationStep(`Verifying index ${index} is valid for array of length ${displayArray.length}`);
-    await sleep(speed * 0.8);
-    
-    setCurrentCodeLine(3); // Comment about O(1) access
-    setAnimationStep('Index is valid, performing direct memory access...');
-    await sleep(speed * 0.6);
-    
-    setCurrentCodeLine(4); // Return statement
+    // Highlight the target element
     setCurrentElementIndex(index);
     setCurrentMemoryIndex(index);
+    setElementStates(prev => ({ ...prev, [index]: 'accessing' }));
+    
+    setAnimationStep(`✅ Index ${index} is valid for array of length ${visualArrayState.length}`);
+    await sleep(speed * 0.8);
+    
+    setCurrentCodeLine(2); // Comment about O(1) direct access
+    setAnimationStep('Calculating memory address for direct access...');
+    await sleep(speed * 0.6);
+    
+    setCurrentCodeLine(3); // Return statement - actual access
+    const accessedValueResult = visualArrayState[index];
+    
+    // Show the access happening with visual feedback
     setElementStates(prev => ({ ...prev, [index]: 'accessed' }));
-    setAnimationStep(`Accessing value ${displayArray[index]} at index ${index} - O(1) operation`);
-    await sleep(speed * 1.2);
+    setAccessedValue(accessedValueResult); // Store the result
+    setAnimationStep(`🎯 Successfully accessed value ${accessedValueResult} at index ${index} - O(1) operation`);
+    
+    // DEBUG: Log the successful access
+    console.log(`✅ ACCESS SUCCESSFUL: arr[${index}] = ${accessedValueResult}`);
+    
+    await sleep(speed * 1.5);
+    
+    // Keep the accessed element highlighted and show final result
+    setCurrentElementIndex(index);
+    setCurrentCodeLine(3); // Keep highlighting the return line
+    setAnimationStep(`✅ Array access complete! Value: ${accessedValueResult}`);
+    
+    await sleep(speed * 0.8);
   };
 
   // Main animation starter
@@ -619,7 +924,7 @@ const ArrayVisualizerPage = () => {
     
     setIsAnimating(true);
     setIsPlaying(true);
-    resetAnimation();
+    clearAnimationStates(); // Use clearAnimationStates instead of resetAnimation
     
     try {
       switch (operation) {
@@ -743,9 +1048,17 @@ const ArrayVisualizerPage = () => {
           {/* Minimal Status Indicator */}
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${isAnimating ? 'bg-green-400 animate-pulse' : 'bg-gray-500'}`} />
+              <div className={`w-2 h-2 rounded-full ${
+                isAnimating || isStepAnimating 
+                  ? 'bg-green-400 animate-pulse' 
+                  : 'bg-gray-500'
+              }`} />
               <span className="text-white/60 text-sm">
-                {isAnimating ? 'Animation Running' : 'Ready'}
+                {isStepAnimating 
+                  ? `Step ${currentStepIndex + 1}/${animationSteps.length}` 
+                  : isAnimating 
+                  ? 'Animation Running' 
+                  : 'Ready'}
               </span>
             </div>
             
@@ -878,7 +1191,27 @@ const ArrayVisualizerPage = () => {
                           </motion.button>
                         </div>
                         <div className="text-xs text-gray-400 mt-2">
-                          Current array length: {displayArray.length} elements
+                          Current array length: {visualArrayState.length} elements
+                        </div>
+                      </div>
+
+                      {/* Current Array Display */}
+                      <div>
+                        <label className="block text-white font-medium mb-2">Current Array</label>
+                        <div className="bg-gray-900/80 rounded-xl p-4 border border-gray-600/50">
+                          <div className="flex flex-wrap gap-2 justify-center">
+                            {visualArrayState.map((value, index) => (
+                              <div 
+                                key={`current-${index}`}
+                                className="bg-gradient-to-br from-slate-700/80 to-gray-800/80 border border-slate-500/60 rounded-lg w-12 h-12 flex items-center justify-center text-white font-bold text-sm"
+                              >
+                                {value}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="text-xs text-gray-400 text-center mt-2">
+                            Array: [{visualArrayState.join(', ')}]
+                          </div>
                         </div>
                       </div>
 
@@ -913,7 +1246,11 @@ const ArrayVisualizerPage = () => {
                       <span className="text-white font-semibold">Status</span>
                     </div>
                     <p className="text-sm text-gray-300">
-                      {isAnimating ? 'Animation in progress...' : 'Ready for operation'}
+                      {isStepAnimating 
+                        ? `Step-by-step animation: ${currentStepIndex + 1}/${animationSteps.length}` 
+                        : isAnimating 
+                        ? 'Animation in progress...' 
+                        : 'Ready for operation'}
                     </p>
                     {isAnimating && (
                       <div className="mt-2 bg-gray-800 rounded-full h-2 overflow-hidden">
@@ -1066,12 +1403,12 @@ const ArrayVisualizerPage = () => {
                               onChange={(e) => setAccessIndex(e.target.value)}
                               disabled={isAnimating}
                               className="w-full bg-gray-800/80 text-white border border-gray-600 rounded-xl px-4 py-3 text-sm focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/20 transition-all backdrop-blur-sm"
-                              placeholder={`Enter index (0-${displayArray.length - 1})`}
+                              placeholder={`Enter index (0-${visualArrayState.length - 1})`}
                               min="0"
-                              max={displayArray.length - 1}
+                              max={visualArrayState.length - 1}
                             />
                             <div className="absolute right-3 top-3 text-gray-400 text-sm">
-                              Max: {displayArray.length - 1}
+                              Max: {visualArrayState.length - 1}
                             </div>
                           </div>
                           <div className="text-xs text-gray-400 bg-gray-800/50 p-2 rounded-lg">
@@ -1136,12 +1473,12 @@ const ArrayVisualizerPage = () => {
                                 onChange={(e) => setInsertIndex(e.target.value)}
                                 disabled={isAnimating}
                                 className="w-full bg-gray-800/80 text-white border border-gray-600 rounded-xl px-4 py-3 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all backdrop-blur-sm"
-                                placeholder={`Position (0-${displayArray.length})`}
+                                placeholder={`Position (0-${visualArrayState.length})`}
                                 min="0"
-                                max={displayArray.length}
+                                max={visualArrayState.length}
                               />
                               <div className="absolute right-3 top-3 text-gray-400 text-sm">
-                                Max: {displayArray.length}
+                                Max: {visualArrayState.length}
                               </div>
                             </div>
                           </div>
@@ -1167,12 +1504,12 @@ const ArrayVisualizerPage = () => {
                               onChange={(e) => setDeleteIndex(e.target.value)}
                               disabled={isAnimating}
                               className="w-full bg-gray-800/80 text-white border border-gray-600 rounded-xl px-4 py-3 text-sm focus:border-red-500 focus:ring-2 focus:ring-red-500/20 transition-all backdrop-blur-sm"
-                              placeholder={`Index (0-${displayArray.length - 1})`}
+                              placeholder={`Index (0-${visualArrayState.length - 1})`}
                               min="0"
-                              max={displayArray.length - 1}
+                              max={visualArrayState.length - 1}
                             />
                             <div className="absolute right-3 top-3 text-gray-400 text-sm">
-                              Max: {displayArray.length - 1}
+                              Max: {visualArrayState.length - 1}
                             </div>
                           </div>
                           <div className="text-xs text-gray-400 bg-gray-800/50 p-2 rounded-lg">
@@ -1253,7 +1590,7 @@ const ArrayVisualizerPage = () => {
                     
                     <div className="grid grid-cols-2 gap-3">
                       <motion.button
-                        onClick={resetAnimation}
+                        onClick={clearAnimationStates}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                         className="bg-gray-700/80 hover:bg-gray-600/80 text-white py-3 px-4 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-2 border border-gray-600/50"
@@ -1329,6 +1666,21 @@ const ArrayVisualizerPage = () => {
                   {loopVariable && (
                     <div className="text-yellow-400 text-xs mt-1">Loop: {loopVariable}</div>
                   )}
+                  
+                  {/* Operation Result Display */}
+                  {operation === 'search' && foundIndex !== null && (
+                    <div className="mt-2 p-2 bg-gray-900/60 rounded border border-gray-600/50">
+                      <div className="text-cyan-300 text-xs font-medium mb-1">Search Result:</div>
+                      <div className={`text-sm font-mono ${foundIndex >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        Return Value: <span className="font-bold">{foundIndex}</span>
+                        {foundIndex >= 0 ? (
+                          <span className="text-green-300 text-xs ml-2">(Found at index {foundIndex})</span>
+                        ) : (
+                          <span className="text-red-300 text-xs ml-2">(Not found)</span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -1340,16 +1692,24 @@ const ArrayVisualizerPage = () => {
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     <Activity className="w-5 h-5 text-cyan-400" />
                     Array Visualization
-                    <span className="text-sm text-gray-400">({displayArray.length} elements)</span>
+                    <span className="text-sm text-gray-400">({visualArrayState.length} elements)</span>
                   </h3>
                 </div>
                 
                 {/* Array Elements - Responsive Grid */}
                 <div className="flex-1 flex items-center justify-center">
                   <div className="w-full max-w-full overflow-x-auto">
-                    <div className="flex justify-center items-center gap-3 p-4 min-w-max">
+                    <div className={`flex justify-center items-center p-4 min-w-max ${
+                      visualArrayState.length <= 6 
+                        ? 'gap-4' 
+                        : visualArrayState.length <= 8 
+                        ? 'gap-3' 
+                        : visualArrayState.length <= 10 
+                        ? 'gap-2' 
+                        : 'gap-1'
+                    }`}>
                       <AnimatePresence mode="popLayout">
-                        {displayArray.map((value, index) => (
+                        {visualArrayState.map((value, index) => (
                           <motion.div
                             key={`array-${index}-${value}`}
                             layout
@@ -1374,16 +1734,45 @@ const ArrayVisualizerPage = () => {
                               [{index}]
                             </div>
                             
-                            {/* Element box */}
-                            <div className={getElementStyle(index)}>
+                            {/* Element box with enhanced complementary colors */}
+                            <div className={`${getElementStyle(index)} ${
+                              currentElementIndex === index 
+                                ? 'ring-2 ring-cyan-400/50 shadow-lg shadow-cyan-400/25' 
+                                : ''
+                            } ${
+                              isStepAnimating 
+                                ? 'transition-all duration-300 ease-in-out' 
+                                : ''
+                            }`}>
                               <span className="relative z-10 text-lg font-bold">{value}</span>
                               
-                              {/* Current element indicator */}
+                              {/* Current element indicator with complementary glow */}
                               {currentElementIndex === index && (
                                 <motion.div
-                                  className="absolute -inset-1 bg-gradient-to-r from-cyan-400/20 to-blue-500/20 rounded-xl"
-                                  animate={{ opacity: [0.5, 1, 0.5] }}
-                                  transition={{ duration: 1, repeat: Infinity }}
+                                  className="absolute -inset-1 bg-gradient-to-r from-cyan-400/30 via-blue-500/30 to-purple-500/30 rounded-xl blur-sm"
+                                  animate={{ 
+                                    opacity: [0.4, 0.8, 0.4],
+                                    scale: [1, 1.05, 1]
+                                  }}
+                                  transition={{ duration: 1.5, repeat: Infinity }}
+                                />
+                              )}
+                              
+                              {/* Step animation indicator */}
+                              {isStepAnimating && elementStates[index] && (
+                                <motion.div
+                                  className="absolute -inset-0.5 rounded-xl"
+                                  style={{
+                                    background: elementStates[index] === 'shifting' 
+                                      ? 'linear-gradient(45deg, #f59e0b, #d97706)' 
+                                      : elementStates[index] === 'inserting'
+                                      ? 'linear-gradient(45deg, #10b981, #059669)' 
+                                      : elementStates[index] === 'deleting'
+                                      ? 'linear-gradient(45deg, #ef4444, #dc2626)'
+                                      : 'linear-gradient(45deg, #6366f1, #4f46e5)'
+                                  }}
+                                  animate={{ opacity: [0.2, 0.6, 0.2] }}
+                                  transition={{ duration: 0.8, repeat: Infinity }}
                                 />
                               )}
                             </div>
@@ -1403,7 +1792,7 @@ const ArrayVisualizerPage = () => {
                 <div className="mt-3 text-center">
                   {currentIteration >= 0 && operation === 'search' && (
                     <div className="bg-blue-500/20 text-blue-300 px-3 py-1 rounded-lg text-sm">
-                      Iteration {currentIteration + 1} of {displayArray.length}
+                      Iteration {currentIteration + 1} of {visualArrayState.length}
                     </div>
                   )}
                 </div>
@@ -1484,11 +1873,11 @@ const ArrayVisualizerPage = () => {
                 <div className="space-y-1 text-xs text-gray-300">
                   <div className="flex justify-between">
                     <span>Array Size:</span>
-                    <span className="text-cyan-400">{displayArray.length * 4} bytes</span>
+                    <span className="text-cyan-400">{visualArrayState.length * 4} bytes</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Elements:</span>
-                    <span className="text-white">{displayArray.length}</span>
+                    <span className="text-white">{visualArrayState.length}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Language:</span>

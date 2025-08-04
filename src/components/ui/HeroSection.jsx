@@ -110,7 +110,7 @@ const HeroSection = () => {
           </motion.div>
         </motion.div>
 
-        {/* Scroll Indicator */}
+        {/* Scroll Indicator
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -128,7 +128,7 @@ const HeroSection = () => {
               className="w-1 h-2 bg-white/60 rounded-full mt-2"
             />
           </motion.div>
-        </motion.div>
+        </motion.div> */}
       </div>
 
       {/* Cosmic Elements */}
