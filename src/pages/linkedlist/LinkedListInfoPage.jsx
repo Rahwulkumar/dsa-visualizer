@@ -4,100 +4,103 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Database, Clock, Code, Layers, MemoryStick } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
 import { Stars, OrbitControls } from '@react-three/drei';
-import SpaceBackground from '../components/3d/SpaceBackground';
-import AsteroidField from '../components/3d/AsteroidField';
-import FloatingParticles from '../components/3d/FloatingParticles';
+import SpaceBackground from '../../components/3d/SpaceBackground';
+import AsteroidField from '../../components/3d/AsteroidField';
+import FloatingParticles from '../../components/3d/FloatingParticles';
 
-const StackInfoPage = () => {
+const LinkedListInfoPage = () => {
   const navigate = useNavigate();
 
   const operations = [
     {
-      operation: "Push",
-      complexity: "O(1)",
-      explanation: "Add an element to the top of the stack. Simply place the new element on top."
+      operation: "Access",
+      complexity: "O(n)",
+      explanation: "Must traverse from the head node to the target position, as there's no direct indexing."
     },
     {
-      operation: "Pop",
-      complexity: "O(1)",
-      explanation: "Remove and return the top element from the stack. Access is always from the top."
+      operation: "Search",
+      complexity: "O(n)",
+      explanation: "In worst case, every node must be visited sequentially until the target is found."
     },
     {
-      operation: "Peek/Top",
+      operation: "Insertion (at beginning)",
       complexity: "O(1)",
-      explanation: "View the top element without removing it. Direct access to the most recent element."
+      explanation: "Create a new node and update the head pointer to point to the new node."
     },
     {
-      operation: "IsEmpty",
-      complexity: "O(1)",
-      explanation: "Check if the stack has any elements. Simple size or pointer check."
+      operation: "Insertion (at end)",
+      complexity: "O(n)",
+      explanation: "Must traverse to the last node, then create and link the new node."
     },
     {
-      operation: "Size",
+      operation: "Deletion (at beginning)",
       complexity: "O(1)",
-      explanation: "Get the number of elements in the stack. Maintained as a counter variable."
+      explanation: "Update the head pointer to the second node and free the first node."
+    },
+    {
+      operation: "Deletion (at end/middle)",
+      complexity: "O(n)",
+      explanation: "Must traverse to find the target node, then update the previous node's pointer."
     }
   ];
 
-  const codeExample = `// JavaScript Stack Example
-class Stack {
-    constructor() {
-        this.items = [];
-        this.count = 0;
-    }
-
-    // Push operation - O(1)
-    push(element) {
-        this.items[this.count] = element;
-        this.count++;
-        return this.count;
-    }
-
-    // Pop operation - O(1)
-    pop() {
-        if (this.isEmpty()) {
-            return undefined;
-        }
-        this.count--;
-        const element = this.items[this.count];
-        delete this.items[this.count];
-        return element;
-    }
-
-    // Peek operation - O(1)
-    peek() {
-        if (this.isEmpty()) {
-            return undefined;
-        }
-        return this.items[this.count - 1];
-    }
-
-    // Check if empty - O(1)
-    isEmpty() {
-        return this.count === 0;
-    }
-
-    // Get size - O(1)
-    size() {
-        return this.count;
-    }
-
-    // Clear stack - O(1)
-    clear() {
-        this.items = [];
-        this.count = 0;
+  const codeExample = `// JavaScript Linked List Example
+class ListNode {
+    constructor(val) {
+        this.val = val;
+        this.next = null;
     }
 }
 
-// Usage example
-const stack = new Stack();
-stack.push(10);    // Stack: [10]
-stack.push(20);    // Stack: [10, 20]
-stack.push(30);    // Stack: [10, 20, 30]
-
-console.log(stack.peek()); // Output: 30
-console.log(stack.pop());  // Output: 30, Stack: [10, 20]
-console.log(stack.size()); // Output: 2`;
+class LinkedList {
+    constructor() {
+        this.head = null;
+        this.size = 0;
+    }
+    
+    // Insert at beginning - O(1)
+    prepend(val) {
+        const newNode = new ListNode(val);
+        newNode.next = this.head;
+        this.head = newNode;
+        this.size++;
+    }
+    
+    // Search for value - O(n)
+    search(val) {
+        let current = this.head;
+        let index = 0;
+        while (current) {
+            if (current.val === val) return index;
+            current = current.next;
+            index++;
+        }
+        return -1;  // Not found
+    }
+    
+    // Delete first occurrence - O(n)
+    delete(val) {
+        if (!this.head) return false;
+        
+        if (this.head.val === val) {
+            this.head = this.head.next;
+            this.size--;
+            return true;
+        }
+        
+        let current = this.head;
+        while (current.next && current.next.val !== val) {
+            current = current.next;
+        }
+        
+        if (current.next) {
+            current.next = current.next.next;
+            this.size--;
+            return true;
+        }
+        return false;
+    }
+}`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-space-deep to-space-dark">
@@ -168,17 +171,17 @@ console.log(stack.size()); // Output: 2`;
           className="text-center mb-16"
         >
           <div className="flex justify-center mb-6">
-            <div className="p-6 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-3xl backdrop-blur-sm border border-purple-500/30">
-              <Database className="w-16 h-16 text-purple-400" />
+            <div className="p-6 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-3xl backdrop-blur-sm border border-blue-500/30">
+              <Database className="w-16 h-16 text-blue-400" />
             </div>
           </div>
           <h1 className="text-6xl md:text-7xl font-bold font-display text-white mb-6">
-            <span className="bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">
-              Stacks
+            <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+              Linked Lists
             </span>
           </h1>
           <p className="text-2xl text-white/70 max-w-4xl mx-auto leading-relaxed">
-            Master the LIFO principle and understand memory management fundamentals
+            Journey through dynamic memory allocation and pointer-based data structures
           </p>
         </motion.div>
 
@@ -190,46 +193,48 @@ console.log(stack.size()); // Output: 2`;
           className="glass-card p-10 mb-12"
         >
           <div className="flex items-center gap-4 mb-8">
-            <Layers className="w-8 h-8 text-purple-400" />
-            <h2 className="text-3xl font-bold text-white">What is a Stack?</h2>
+            <Layers className="w-8 h-8 text-blue-400" />
+            <h2 className="text-3xl font-bold text-white">What is a Linked List?</h2>
           </div>
           
           <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div className="space-y-6">
               <p className="text-white/90 text-xl leading-relaxed">
-                A stack is a linear data structure that follows the 
-                <span className="text-purple-400 font-semibold"> Last In, First Out (LIFO)</span> principle. 
-                Think of it like a stack of plates - you can only add or remove plates from the top.
+                A linked list is a linear data structure where elements are stored in 
+                <span className="text-blue-400 font-semibold"> nodes</span>, and each node contains 
+                data and a <span className="text-purple-400 font-semibold">pointer</span> to the next node. 
+                Unlike arrays, linked lists don't require contiguous memory allocation.
               </p>
               
               <p className="text-white/80 text-lg leading-relaxed">
-                Stacks are fundamental to <span className="text-pink-400 font-semibold">function calls</span>, 
-                expression evaluation, undo operations, and memory management in programming languages.
+                Linked lists excel at <span className="text-purple-400 font-semibold">dynamic memory allocation</span> and 
+                efficient insertion/deletion operations, making them perfect for scenarios where the size 
+                of data varies frequently.
               </p>
             </div>
             
             <div className="flex justify-center">
               <div className="space-y-4">
-                <div className="text-center text-white/60 text-sm font-medium">Stack Visualization (LIFO)</div>
-                <div className="flex flex-col-reverse items-center gap-1">
-                  {['Third (Top)', 'Second', 'First (Bottom)'].map((item, index) => (
-                    <div key={index} className="text-center">
-                      <div className={`w-20 h-12 ${
-                        index === 2 ? 'bg-gradient-to-br from-purple-500 to-pink-600' : 
-                        index === 1 ? 'bg-gradient-to-br from-purple-600 to-pink-700' : 
-                        'bg-gradient-to-br from-purple-700 to-pink-800'
-                      } rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-lg border-2 ${
-                        index === 2 ? 'border-purple-300' : 'border-purple-500'
-                      }`}>
-                        {index + 1}
+                <div className="text-center text-white/60 text-sm font-medium">Linked List Visualization</div>
+                <div className="flex items-center gap-4">
+                  {[{ val: 'A', next: true }, { val: 'B', next: true }, { val: 'C', next: false }].map((node, index) => (
+                    <div key={index} className="flex items-center">
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg mb-2 shadow-lg">
+                          {node.val}
+                        </div>
+                        <div className="text-white/60 text-xs font-mono">Node {index + 1}</div>
                       </div>
-                      {index === 2 && (
-                        <div className="text-purple-400 text-xs mt-1 font-mono">← Top (Push/Pop)</div>
+                      {node.next && (
+                        <div className="mx-2 text-blue-400 text-xl">→</div>
+                      )}
+                      {!node.next && (
+                        <div className="mx-2 text-white/40 text-lg">∅</div>
                       )}
                     </div>
                   ))}
                 </div>
-                <div className="text-center text-white/50 text-xs">LIFO Operation</div>
+                <div className="text-center text-white/50 text-xs">Pointer-based traversal</div>
               </div>
             </div>
           </div>
@@ -243,47 +248,47 @@ console.log(stack.size()); // Output: 2`;
           className="glass-card p-10 mb-12"
         >
           <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-4">
-            <MemoryStick className="w-8 h-8 text-purple-400" />
+            <MemoryStick className="w-8 h-8 text-blue-400" />
             Key Characteristics
           </h2>
           
           <div className="grid lg:grid-cols-3 gap-8">
-            <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl p-8 border border-purple-500/20 hover:border-purple-500/40 transition-all">
-              <div className="text-4xl mb-4">📚</div>
-              <h3 className="text-purple-400 font-bold text-xl mb-4">LIFO Principle</h3>
+            <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-2xl p-8 border border-blue-500/20 hover:border-blue-500/40 transition-all">
+              <div className="text-4xl mb-4">🔗</div>
+              <h3 className="text-blue-400 font-bold text-xl mb-4">Dynamic Memory</h3>
               <p className="text-white/80 leading-relaxed">
-                Last In, First Out - the most recently added element is the first one to be removed. 
-                All operations happen at the top of the stack.
+                Nodes are allocated dynamically during runtime, allowing the list to grow or shrink 
+                as needed without declaring a fixed size.
               </p>
               <div className="mt-4 p-3 bg-black/20 rounded-lg">
-                <div className="text-xs text-white/60 font-mono">Order:</div>
-                <div className="text-sm text-green-400 font-mono">Push(A) → Push(B) → Pop() = B</div>
+                <div className="text-xs text-white/60 font-mono">Memory:</div>
+                <div className="text-sm text-green-400 font-mono">heap → node1 → node2 → null</div>
               </div>
             </div>
             
-            <div className="bg-gradient-to-br from-pink-500/10 to-red-500/10 rounded-2xl p-8 border border-pink-500/20 hover:border-pink-500/40 transition-all">
-              <div className="text-4xl mb-4">⚡</div>
-              <h3 className="text-pink-400 font-bold text-xl mb-4">Constant Time</h3>
+            <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl p-8 border border-purple-500/20 hover:border-purple-500/40 transition-all">
+              <div className="text-4xl mb-4">📍</div>
+              <h3 className="text-purple-400 font-bold text-xl mb-4">Sequential Access</h3>
               <p className="text-white/80 leading-relaxed">
-                All basic operations (push, pop, peek) are O(1) - constant time complexity. 
-                No need to traverse or search through elements.
+                Elements must be accessed sequentially by following pointers from the head node. 
+                No random access like arrays.
               </p>
               <div className="mt-4 p-3 bg-black/20 rounded-lg">
-                <div className="text-xs text-white/60 font-mono">Complexity:</div>
-                <div className="text-sm text-green-400 font-mono">Push O(1), Pop O(1), Peek O(1)</div>
+                <div className="text-xs text-white/60 font-mono">Access:</div>
+                <div className="text-sm text-green-400 font-mono">head → next → next → target</div>
               </div>
             </div>
             
             <div className="bg-gradient-to-br from-green-500/10 to-teal-500/10 rounded-2xl p-8 border border-green-500/20 hover:border-green-500/40 transition-all">
               <div className="text-4xl mb-4">🎯</div>
-              <h3 className="text-green-400 font-bold text-xl mb-4">Function Calls</h3>
+              <h3 className="text-green-400 font-bold text-xl mb-4">Efficient Insertion</h3>
               <p className="text-white/80 leading-relaxed">
-                Programming languages use stacks for function call management, storing local variables, 
-                return addresses, and maintaining execution context.
+                Inserting or deleting at the beginning is O(1) - just update pointers. 
+                No shifting of elements required.
               </p>
               <div className="mt-4 p-3 bg-black/20 rounded-lg">
-                <div className="text-xs text-white/60 font-mono">Call Stack:</div>
-                <div className="text-sm text-green-400 font-mono">main() → func1() → func2()</div>
+                <div className="text-xs text-white/60 font-mono">Insert:</div>
+                <div className="text-sm text-green-400 font-mono">newNode.next = head; head = newNode</div>
               </div>
             </div>
           </div>
@@ -297,17 +302,17 @@ console.log(stack.size()); // Output: 2`;
           className="glass-card p-10 mb-12"
         >
           <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-4">
-            <Clock className="w-8 h-8 text-purple-400" />
+            <Clock className="w-8 h-8 text-blue-400" />
             Common Operations & Time Complexity
           </h2>
           
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b-2 border-purple-500/30">
-                  <th className="text-left text-purple-400 font-bold py-4 px-6 text-lg">Operation</th>
-                  <th className="text-left text-purple-400 font-bold py-4 px-6 text-lg">Time Complexity</th>
-                  <th className="text-left text-purple-400 font-bold py-4 px-6 text-lg">Explanation</th>
+                <tr className="border-b-2 border-blue-500/30">
+                  <th className="text-left text-blue-400 font-bold py-4 px-6 text-lg">Operation</th>
+                  <th className="text-left text-blue-400 font-bold py-4 px-6 text-lg">Time Complexity</th>
+                  <th className="text-left text-blue-400 font-bold py-4 px-6 text-lg">Explanation</th>
                 </tr>
               </thead>
               <tbody>
@@ -341,7 +346,7 @@ console.log(stack.size()); // Output: 2`;
           className="glass-card p-10 mb-12"
         >
           <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-4">
-            <Code className="w-8 h-8 text-purple-400" />
+            <Code className="w-8 h-8 text-blue-400" />
             Code Example
           </h2>
           
@@ -350,7 +355,7 @@ console.log(stack.size()); // Output: 2`;
               <div className="w-3 h-3 bg-red-500 rounded-full"></div>
               <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-white/60 text-sm ml-4">stack-example.js</span>
+              <span className="text-white/60 text-sm ml-4">linked-list-example.js</span>
             </div>
             <pre className="text-green-400 font-mono text-sm leading-relaxed overflow-x-auto">
               <code>{codeExample}</code>
@@ -365,15 +370,15 @@ console.log(stack.size()); // Output: 2`;
           transition={{ duration: 0.8, delay: 1.6 }}
           className="text-center"
         >
-          <div className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-3xl p-12 border border-purple-500/20 backdrop-blur-sm">
-            <h3 className="text-2xl font-bold text-white mb-4">Ready to See Stacks in Action?</h3>
+          <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-3xl p-12 border border-blue-500/20 backdrop-blur-sm">
+            <h3 className="text-2xl font-bold text-white mb-4">Ready to See Linked Lists in Action?</h3>
             <p className="text-white/70 text-lg mb-8 max-w-2xl mx-auto">
-              Experience real-time stack operations with synchronized code execution and LIFO visualization
+              Experience real-time linked list operations with synchronized code execution and pointer visualization
             </p>
             
             <button
-              onClick={() => navigate('/stack-visualizer')}
-              className="group bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 text-white font-bold py-6 px-12 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/25 flex items-center gap-4 mx-auto text-xl"
+              onClick={() => navigate('/linked-list-visualizer')}
+              className="group bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 text-white font-bold py-6 px-12 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25 flex items-center gap-4 mx-auto text-xl"
             >
               <span>Start Visualization</span>
               <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
@@ -385,4 +390,4 @@ console.log(stack.size()); // Output: 2`;
   );
 };
 
-export default StackInfoPage;
+export default LinkedListInfoPage;

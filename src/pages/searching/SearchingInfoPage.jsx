@@ -4,9 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Search, Clock, Code, Layers, MemoryStick } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
 import { Stars, OrbitControls } from '@react-three/drei';
-import SpaceBackground from '../components/3d/SpaceBackground';
-import AsteroidField from '../components/3d/AsteroidField';
-import FloatingParticles from '../components/3d/FloatingParticles';
+import SpaceBackground from '../../components/3d/SpaceBackground';
+import AsteroidField from '../../components/3d/AsteroidField';
+import FloatingParticles from '../../components/3d/FloatingParticles';
 
 const SearchingInfoPage = () => {
   const navigate = useNavigate();

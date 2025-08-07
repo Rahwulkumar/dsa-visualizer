@@ -4,101 +4,131 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Database, Clock, Code, Layers, MemoryStick } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
 import { Stars, OrbitControls } from '@react-three/drei';
-import SpaceBackground from '../components/3d/SpaceBackground';
-import AsteroidField from '../components/3d/AsteroidField';
-import FloatingParticles from '../components/3d/FloatingParticles';
+import SpaceBackground from '../../components/3d/SpaceBackground';
+import AsteroidField from '../../components/3d/AsteroidField';
+import FloatingParticles from '../../components/3d/FloatingParticles';
 
-const LinkedListInfoPage = () => {
+const QueueInfoPage = () => {
   const navigate = useNavigate();
 
   const operations = [
     {
-      operation: "Access",
-      complexity: "O(n)",
-      explanation: "Must traverse from the head node to the target position, as there's no direct indexing."
-    },
-    {
-      operation: "Search",
-      complexity: "O(n)",
-      explanation: "In worst case, every node must be visited sequentially until the target is found."
-    },
-    {
-      operation: "Insertion (at beginning)",
+      operation: "Enqueue",
       complexity: "O(1)",
-      explanation: "Create a new node and update the head pointer to point to the new node."
+      explanation: "Add an element to the rear (end) of the queue. New elements always join at the back."
     },
     {
-      operation: "Insertion (at end)",
-      complexity: "O(n)",
-      explanation: "Must traverse to the last node, then create and link the new node."
-    },
-    {
-      operation: "Deletion (at beginning)",
+      operation: "Dequeue",
       complexity: "O(1)",
-      explanation: "Update the head pointer to the second node and free the first node."
+      explanation: "Remove and return the front element from the queue. Elements always leave from the front."
     },
     {
-      operation: "Deletion (at end/middle)",
-      complexity: "O(n)",
-      explanation: "Must traverse to find the target node, then update the previous node's pointer."
+      operation: "Front/Peek",
+      complexity: "O(1)",
+      explanation: "View the front element without removing it. Access to the next element to be processed."
+    },
+    {
+      operation: "Rear/Back",
+      complexity: "O(1)",
+      explanation: "View the rear element without removing it. Access to the most recently added element."
+    },
+    {
+      operation: "IsEmpty",
+      complexity: "O(1)",
+      explanation: "Check if the queue has any elements. Simple size or pointer check."
+    },
+    {
+      operation: "Size",
+      complexity: "O(1)",
+      explanation: "Get the number of elements in the queue. Maintained as a counter variable."
     }
   ];
 
-  const codeExample = `// JavaScript Linked List Example
-class ListNode {
-    constructor(val) {
-        this.val = val;
-        this.next = null;
+  const codeExample = `// JavaScript Queue Example
+class Queue {
+    constructor() {
+        this.items = [];
+        this.front = 0;
+        this.rear = 0;
+    }
+
+    // Enqueue operation - O(1)
+    enqueue(element) {
+        this.items[this.rear] = element;
+        this.rear++;
+        return this.size();
+    }
+
+    // Dequeue operation - O(1)
+    dequeue() {
+        if (this.isEmpty()) {
+            return undefined;
+        }
+        const element = this.items[this.front];
+        delete this.items[this.front];
+        this.front++;
+        return element;
+    }
+
+    // Peek front element - O(1)
+    peek() {
+        if (this.isEmpty()) {
+            return undefined;
+        }
+        return this.items[this.front];
+    }
+
+    // Check if empty - O(1)
+    isEmpty() {
+        return this.rear === this.front;
+    }
+
+    // Get size - O(1)
+    size() {
+        return this.rear - this.front;
+    }
+
+    // Clear queue - O(1)
+    clear() {
+        this.items = [];
+        this.front = 0;
+        this.rear = 0;
     }
 }
 
-class LinkedList {
-    constructor() {
-        this.head = null;
-        this.size = 0;
+// Circular Queue Implementation (more memory efficient)
+class CircularQueue {
+    constructor(capacity) {
+        this.items = new Array(capacity);
+        this.capacity = capacity;
+        this.front = 0;
+        this.rear = 0;
+        this.count = 0;
     }
-    
-    // Insert at beginning - O(1)
-    prepend(val) {
-        const newNode = new ListNode(val);
-        newNode.next = this.head;
-        this.head = newNode;
-        this.size++;
+
+    enqueue(element) {
+        if (this.isFull()) {
+            return false;
+        }
+        this.items[this.rear] = element;
+        this.rear = (this.rear + 1) % this.capacity;
+        this.count++;
+        return true;
     }
-    
-    // Search for value - O(n)
-    search(val) {
-        let current = this.head;
-        let index = 0;
-        while (current) {
-            if (current.val === val) return index;
-            current = current.next;
-            index++;
+
+    dequeue() {
+        if (this.isEmpty()) {
+            return undefined;
         }
-        return -1;  // Not found
+        const element = this.items[this.front];
+        this.items[this.front] = undefined;
+        this.front = (this.front + 1) % this.capacity;
+        this.count--;
+        return element;
     }
-    
-    // Delete first occurrence - O(n)
-    delete(val) {
-        if (!this.head) return false;
-        
-        if (this.head.val === val) {
-            this.head = this.head.next;
-            this.size--;
-            return true;
-        }
-        
-        let current = this.head;
-        while (current.next && current.next.val !== val) {
-            current = current.next;
-        }
-        
-        if (current.next) {
-            current.next = current.next.next;
-            this.size--;
-            return true;
-        }
-        return false;
+
+    isFull() {
+        return this.count === this.capacity;
     }
 }`;
 
@@ -171,17 +201,17 @@ class LinkedList {
           className="text-center mb-16"
         >
           <div className="flex justify-center mb-6">
-            <div className="p-6 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-3xl backdrop-blur-sm border border-blue-500/30">
-              <Database className="w-16 h-16 text-blue-400" />
+            <div className="p-6 bg-gradient-to-r from-pink-500/20 to-red-500/20 rounded-3xl backdrop-blur-sm border border-pink-500/30">
+              <Database className="w-16 h-16 text-pink-400" />
             </div>
           </div>
           <h1 className="text-6xl md:text-7xl font-bold font-display text-white mb-6">
-            <span className="bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-              Linked Lists
+            <span className="bg-gradient-to-r from-pink-400 to-red-500 bg-clip-text text-transparent">
+              Queues
             </span>
           </h1>
           <p className="text-2xl text-white/70 max-w-4xl mx-auto leading-relaxed">
-            Journey through dynamic memory allocation and pointer-based data structures
+            Navigate FIFO data flow and understand real-world processing systems
           </p>
         </motion.div>
 
@@ -193,48 +223,49 @@ class LinkedList {
           className="glass-card p-10 mb-12"
         >
           <div className="flex items-center gap-4 mb-8">
-            <Layers className="w-8 h-8 text-blue-400" />
-            <h2 className="text-3xl font-bold text-white">What is a Linked List?</h2>
+            <Layers className="w-8 h-8 text-pink-400" />
+            <h2 className="text-3xl font-bold text-white">What is a Queue?</h2>
           </div>
           
           <div className="grid lg:grid-cols-2 gap-10 items-center">
             <div className="space-y-6">
               <p className="text-white/90 text-xl leading-relaxed">
-                A linked list is a linear data structure where elements are stored in 
-                <span className="text-blue-400 font-semibold"> nodes</span>, and each node contains 
-                data and a <span className="text-purple-400 font-semibold">pointer</span> to the next node. 
-                Unlike arrays, linked lists don't require contiguous memory allocation.
+                A queue is a linear data structure that follows the 
+                <span className="text-pink-400 font-semibold"> First In, First Out (FIFO)</span> principle. 
+                Think of it like a line at a coffee shop - the first person in line is the first to be served.
               </p>
               
               <p className="text-white/80 text-lg leading-relaxed">
-                Linked lists excel at <span className="text-purple-400 font-semibold">dynamic memory allocation</span> and 
-                efficient insertion/deletion operations, making them perfect for scenarios where the size 
-                of data varies frequently.
+                Queues are essential for <span className="text-red-400 font-semibold">task scheduling</span>, 
+                breadth-first search, buffer management, and handling requests in web servers and operating systems.
               </p>
             </div>
             
             <div className="flex justify-center">
               <div className="space-y-4">
-                <div className="text-center text-white/60 text-sm font-medium">Linked List Visualization</div>
-                <div className="flex items-center gap-4">
-                  {[{ val: 'A', next: true }, { val: 'B', next: true }, { val: 'C', next: false }].map((node, index) => (
-                    <div key={index} className="flex items-center">
-                      <div className="text-center">
-                        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg mb-2 shadow-lg">
-                          {node.val}
-                        </div>
-                        <div className="text-white/60 text-xs font-mono">Node {index + 1}</div>
+                <div className="text-center text-white/60 text-sm font-medium">Queue Visualization (FIFO)</div>
+                <div className="flex items-center gap-1">
+                  <div className="text-pink-400 text-sm font-mono">Front →</div>
+                  {['1st', '2nd', '3rd'].map((item, index) => (
+                    <div key={index} className="text-center">
+                      <div className={`w-16 h-12 ${
+                        index === 0 ? 'bg-gradient-to-br from-pink-500 to-red-600 border-pink-300' : 
+                        index === 1 ? 'bg-gradient-to-br from-pink-600 to-red-700 border-pink-500' : 
+                        'bg-gradient-to-br from-pink-700 to-red-800 border-pink-700'
+                      } rounded-lg flex items-center justify-center text-white font-bold text-sm shadow-lg border-2`}>
+                        {item}
                       </div>
-                      {node.next && (
-                        <div className="mx-2 text-blue-400 text-xl">→</div>
+                      {index === 0 && (
+                        <div className="text-pink-400 text-xs mt-1 font-mono">Dequeue</div>
                       )}
-                      {!node.next && (
-                        <div className="mx-2 text-white/40 text-lg">∅</div>
+                      {index === 2 && (
+                        <div className="text-red-400 text-xs mt-1 font-mono">Enqueue</div>
                       )}
                     </div>
                   ))}
+                  <div className="text-red-400 text-sm font-mono">← Rear</div>
                 </div>
-                <div className="text-center text-white/50 text-xs">Pointer-based traversal</div>
+                <div className="text-center text-white/50 text-xs">FIFO Operation</div>
               </div>
             </div>
           </div>
@@ -248,47 +279,47 @@ class LinkedList {
           className="glass-card p-10 mb-12"
         >
           <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-4">
-            <MemoryStick className="w-8 h-8 text-blue-400" />
+            <MemoryStick className="w-8 h-8 text-pink-400" />
             Key Characteristics
           </h2>
           
           <div className="grid lg:grid-cols-3 gap-8">
-            <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-2xl p-8 border border-blue-500/20 hover:border-blue-500/40 transition-all">
-              <div className="text-4xl mb-4">🔗</div>
-              <h3 className="text-blue-400 font-bold text-xl mb-4">Dynamic Memory</h3>
+            <div className="bg-gradient-to-br from-pink-500/10 to-red-500/10 rounded-2xl p-8 border border-pink-500/20 hover:border-pink-500/40 transition-all">
+              <div className="text-4xl mb-4">🚶‍♂️</div>
+              <h3 className="text-pink-400 font-bold text-xl mb-4">FIFO Principle</h3>
               <p className="text-white/80 leading-relaxed">
-                Nodes are allocated dynamically during runtime, allowing the list to grow or shrink 
-                as needed without declaring a fixed size.
+                First In, First Out - elements are processed in the order they arrive. 
+                Fair scheduling where earlier arrivals get priority.
               </p>
               <div className="mt-4 p-3 bg-black/20 rounded-lg">
-                <div className="text-xs text-white/60 font-mono">Memory:</div>
-                <div className="text-sm text-green-400 font-mono">heap → node1 → node2 → null</div>
+                <div className="text-xs text-white/60 font-mono">Order:</div>
+                <div className="text-sm text-green-400 font-mono">Enqueue(A) → Enqueue(B) → Dequeue() = A</div>
               </div>
             </div>
             
-            <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl p-8 border border-purple-500/20 hover:border-purple-500/40 transition-all">
-              <div className="text-4xl mb-4">📍</div>
-              <h3 className="text-purple-400 font-bold text-xl mb-4">Sequential Access</h3>
+            <div className="bg-gradient-to-br from-red-500/10 to-orange-500/10 rounded-2xl p-8 border border-red-500/20 hover:border-red-500/40 transition-all">
+              <div className="text-4xl mb-4">🔄</div>
+              <h3 className="text-red-400 font-bold text-xl mb-4">Circular Buffer</h3>
               <p className="text-white/80 leading-relaxed">
-                Elements must be accessed sequentially by following pointers from the head node. 
-                No random access like arrays.
+                Circular queues reuse memory efficiently by wrapping around when reaching the end. 
+                Ideal for fixed-size buffers.
               </p>
               <div className="mt-4 p-3 bg-black/20 rounded-lg">
-                <div className="text-xs text-white/60 font-mono">Access:</div>
-                <div className="text-sm text-green-400 font-mono">head → next → next → target</div>
+                <div className="text-xs text-white/60 font-mono">Circular:</div>
+                <div className="text-sm text-green-400 font-mono">rear = (rear + 1) % capacity</div>
               </div>
             </div>
             
             <div className="bg-gradient-to-br from-green-500/10 to-teal-500/10 rounded-2xl p-8 border border-green-500/20 hover:border-green-500/40 transition-all">
-              <div className="text-4xl mb-4">🎯</div>
-              <h3 className="text-green-400 font-bold text-xl mb-4">Efficient Insertion</h3>
+              <div className="text-4xl mb-4">⚡</div>
+              <h3 className="text-green-400 font-bold text-xl mb-4">Real-World Use</h3>
               <p className="text-white/80 leading-relaxed">
-                Inserting or deleting at the beginning is O(1) - just update pointers. 
-                No shifting of elements required.
+                Used in CPU scheduling, printer queues, breadth-first search, and handling requests 
+                in web servers and operating systems.
               </p>
               <div className="mt-4 p-3 bg-black/20 rounded-lg">
-                <div className="text-xs text-white/60 font-mono">Insert:</div>
-                <div className="text-sm text-green-400 font-mono">newNode.next = head; head = newNode</div>
+                <div className="text-xs text-white/60 font-mono">Applications:</div>
+                <div className="text-sm text-green-400 font-mono">BFS, OS Scheduling, Print Jobs</div>
               </div>
             </div>
           </div>
@@ -302,17 +333,17 @@ class LinkedList {
           className="glass-card p-10 mb-12"
         >
           <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-4">
-            <Clock className="w-8 h-8 text-blue-400" />
+            <Clock className="w-8 h-8 text-pink-400" />
             Common Operations & Time Complexity
           </h2>
           
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b-2 border-blue-500/30">
-                  <th className="text-left text-blue-400 font-bold py-4 px-6 text-lg">Operation</th>
-                  <th className="text-left text-blue-400 font-bold py-4 px-6 text-lg">Time Complexity</th>
-                  <th className="text-left text-blue-400 font-bold py-4 px-6 text-lg">Explanation</th>
+                <tr className="border-b-2 border-pink-500/30">
+                  <th className="text-left text-pink-400 font-bold py-4 px-6 text-lg">Operation</th>
+                  <th className="text-left text-pink-400 font-bold py-4 px-6 text-lg">Time Complexity</th>
+                  <th className="text-left text-pink-400 font-bold py-4 px-6 text-lg">Explanation</th>
                 </tr>
               </thead>
               <tbody>
@@ -326,7 +357,7 @@ class LinkedList {
                   >
                     <td className="py-5 px-6 text-white font-semibold text-lg">{op.operation}</td>
                     <td className="py-5 px-6">
-                      <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-bold font-mono shadow-lg">
+                      <span className="bg-gradient-to-r from-pink-500 to-red-500 text-white px-4 py-2 rounded-full text-sm font-bold font-mono shadow-lg">
                         {op.complexity}
                       </span>
                     </td>
@@ -346,7 +377,7 @@ class LinkedList {
           className="glass-card p-10 mb-12"
         >
           <h2 className="text-3xl font-bold text-white mb-8 flex items-center gap-4">
-            <Code className="w-8 h-8 text-blue-400" />
+            <Code className="w-8 h-8 text-pink-400" />
             Code Example
           </h2>
           
@@ -355,7 +386,7 @@ class LinkedList {
               <div className="w-3 h-3 bg-red-500 rounded-full"></div>
               <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
               <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-white/60 text-sm ml-4">linked-list-example.js</span>
+              <span className="text-white/60 text-sm ml-4">queue-example.js</span>
             </div>
             <pre className="text-green-400 font-mono text-sm leading-relaxed overflow-x-auto">
               <code>{codeExample}</code>
@@ -370,15 +401,15 @@ class LinkedList {
           transition={{ duration: 0.8, delay: 1.6 }}
           className="text-center"
         >
-          <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-3xl p-12 border border-blue-500/20 backdrop-blur-sm">
-            <h3 className="text-2xl font-bold text-white mb-4">Ready to See Linked Lists in Action?</h3>
+          <div className="bg-gradient-to-r from-pink-500/10 to-red-500/10 rounded-3xl p-12 border border-pink-500/20 backdrop-blur-sm">
+            <h3 className="text-2xl font-bold text-white mb-4">Ready to See Queues in Action?</h3>
             <p className="text-white/70 text-lg mb-8 max-w-2xl mx-auto">
-              Experience real-time linked list operations with synchronized code execution and pointer visualization
+              Experience real-time queue operations with synchronized code execution and FIFO visualization
             </p>
             
             <button
-              onClick={() => navigate('/linked-list-visualizer')}
-              className="group bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-400 hover:to-purple-400 text-white font-bold py-6 px-12 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25 flex items-center gap-4 mx-auto text-xl"
+              onClick={() => navigate('/queue-visualizer')}
+              className="group bg-gradient-to-r from-pink-500 to-red-500 hover:from-pink-400 hover:to-red-400 text-white font-bold py-6 px-12 rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-pink-500/25 flex items-center gap-4 mx-auto text-xl"
             >
               <span>Start Visualization</span>
               <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
@@ -390,4 +421,4 @@ class LinkedList {
   );
 };
 
-export default LinkedListInfoPage;
+export default QueueInfoPage;
