@@ -1,0 +1,125 @@
+/* Array-specific styles for DSA Visualizer - Space Theme */
+
+/* Array element styles */
+.array-element {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fira Code', monospace;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.5s ease;
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+.array-element.checking {
+    background: rgba(59, 130, 246, 0.3);
+    border-color: rgba(59, 130, 246, 0.6);
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+    transform: scale(1.1);
+}
+
+.array-element.found {
+    background: rgba(16, 185, 129, 0.3);
+    border-color: rgba(16, 185, 129, 0.6);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    animation: twinkle 1.5s ease-in-out infinite;
+}
+
+.array-element.checked {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.array-element.accessed {
+    background: rgba(6, 182, 212, 0.3);
+    border-color: rgba(6, 182, 212, 0.6);
+    box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+    transform: scale(1.1);
+}
+
+.array-element.shifting {
+    background: rgba(234, 179, 8, 0.3);
+    border-color: rgba(234, 179, 8, 0.6);
+    box-shadow: 0 0 15px rgba(234, 179, 8, 0.4);
+    transform: scale(1.05);
+}
+
+.array-element.inserted {
+    background: rgba(16, 185, 129, 0.3);
+    border-color: rgba(16, 185, 129, 0.6);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+    animation: twinkle 1.5s ease-in-out infinite;
+}
+
+.array-element.deleting {
+    background: rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.6);
+    opacity: 0.3;
+    transform: scale(0.9);
+}
+
+/* Sidebar styles for ArrayControls */
+.array-sidebar {
+    background: linear-gradient(to right, rgba(6, 182, 212, 0.2), rgba(59, 130, 246, 0.2));
+    backdrop-filter: blur(12px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.array-sidebar-overlay {
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+}
+
+/* Array container to prevent overflow */
+.array-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .array-element {
+        font-size: 0.875rem;
+    }
+
+    .array-container {
+        gap: 0.25rem;
+        padding: 0.75rem;
+    }
+
+    .array-sidebar {
+        width: 100%;
+        max-width: 360px;
+    }
+}
+
+@media (max-width: 768px) {
+    .array-element {
+        font-size: 0.75rem;
+    }
+
+    .array-container {
+        flex-wrap: wrap;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .array-element {
+        font-size: 0.625rem;
+    }
+
+    .array-sidebar {
+        max-width: 100%;
+    }
+}

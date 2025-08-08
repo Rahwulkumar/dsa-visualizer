@@ -74,16 +74,19 @@ src/components/
 ## Benefits of This Organization
 
 ### 1. **Better Readability**
+
 - Each data structure has its own dedicated folder
 - Related files are grouped together
 - Clear separation between pages and components
 
 ### 2. **Improved Maintainability**
+
 - Easy to locate files related to a specific data structure
 - Consistent folder naming convention
 - Logical hierarchy that matches the application structure
 
 ### 3. **Scalability**
+
 - Easy to add new visualizers or components for each data structure
 - Space for future additions like:
   - `StackVisualizerPage.jsx`
@@ -92,6 +95,7 @@ src/components/
   - And corresponding components
 
 ### 4. **Development Efficiency**
+
 - Developers can quickly find what they need
 - Reduces confusion about file locations
 - Makes onboarding new team members easier
