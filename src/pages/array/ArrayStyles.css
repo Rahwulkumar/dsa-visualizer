@@ -1,51 +1,201 @@
-/* Array-specific styles for DSA Visualizer - Space Theme */
+/* Array-specific styles for DSA Visualizer - Enhanced Glass Theme */
 
-/* Array element styles */
+/* Enhanced Glass card effect for better visibility */
+.glass-card {
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Custom scrollbar for glass containers */
+.scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Enhanced range slider styling */
+.slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 12px;
+    border-radius: 6px;
+    outline: none;
+    background: linear-gradient(to right, #06b6d4 0%, #06b6d4 50%, #374151 50%, #374151 100%);
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #06b6d4, #3b82f6);
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+    transition: all 0.2s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(6, 182, 212, 0.6);
+}
+
+.slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #06b6d4, #3b82f6);
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+}
+
+/* Array element base styles - now using Tailwind classes in component */
 .array-element {
     display: flex;
     align-items: center;
     justify-content: center;
     font-family: 'Fira Code', monospace;
-    font-size: 1rem;
-    font-weight: 500;
-    transition: all 0.5s ease;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
-    border-radius: 12px;
+    border-radius: 8px;
+    background: rgba(31, 41, 55, 0.8);
+    border: 2px solid rgba(75, 85, 99, 0.6);
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
+/* Enhanced animation effects */
+@keyframes twinkle {
+    0%, 100% { 
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), 0 0 30px rgba(16, 185, 129, 0.2);
+        transform: scale(1.1);
+    }
+    50% { 
+        box-shadow: 0 0 25px rgba(16, 185, 129, 0.6), 0 0 50px rgba(16, 185, 129, 0.3);
+        transform: scale(1.15);
+    }
+}
+
+@keyframes pulse-glow {
+    0%, 100% { 
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+    }
+    50% { 
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.6), 0 0 30px rgba(59, 130, 246, 0.4);
+    }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+}
+
+/* State-specific animations */
 .array-element.checking {
-    background: rgba(59, 130, 246, 0.3);
-    border-color: rgba(59, 130, 246, 0.6);
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
-    transform: scale(1.1);
+    animation: pulse-glow 1s ease-in-out infinite;
 }
 
 .array-element.found {
-    background: rgba(16, 185, 129, 0.3);
-    border-color: rgba(16, 185, 129, 0.6);
-    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
     animation: twinkle 1.5s ease-in-out infinite;
 }
 
-.array-element.checked {
-    background: rgba(239, 68, 68, 0.2);
-    border-color: rgba(239, 68, 68, 0.4);
-    color: rgba(255, 255, 255, 0.7);
+/* Glass button effects */
+.glass-button {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
 }
 
-.array-element.accessed {
-    background: rgba(6, 182, 212, 0.3);
-    border-color: rgba(6, 182, 212, 0.6);
-    box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
-    transform: scale(1.1);
+.glass-button:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
-.array-element.shifting {
-    background: rgba(234, 179, 8, 0.3);
-    border-color: rgba(234, 179, 8, 0.6);
-    box-shadow: 0 0 15px rgba(234, 179, 8, 0.4);
-    transform: scale(1.05);
+/* Responsive container */
+.array-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    width: 100%;
+    min-height: 200px;
+    flex-wrap: wrap;
+}
+
+/* Enhanced sidebar styles */
+.array-sidebar {
+    background: linear-gradient(135deg, 
+        rgba(15, 23, 42, 0.95) 0%, 
+        rgba(30, 41, 59, 0.95) 50%, 
+        rgba(15, 23, 42, 0.95) 100%);
+    backdrop-filter: blur(24px);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 
+        -10px 0 25px rgba(0, 0, 0, 0.3),
+        inset 1px 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.array-sidebar-overlay {
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(12px);
+}
+
+/* Improved responsive design */
+@media (max-width: 1200px) {
+    .array-container {
+        gap: 0.5rem;
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .array-container {
+        gap: 0.375rem;
+        padding: 0.75rem;
+        min-height: 150px;
+    }
+    
+    .glass-card {
+        border-radius: 16px;
+    }
+    
+    .array-sidebar {
+        width: 100vw;
+        max-width: 100vw;
+    }
+}
+
+@media (max-width: 480px) {
+    .array-container {
+        gap: 0.25rem;
+        padding: 0.5rem;
+        min-height: 120px;
+    }
 }
 
 .array-element.inserted {

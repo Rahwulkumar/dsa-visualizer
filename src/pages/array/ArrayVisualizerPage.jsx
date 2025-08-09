@@ -8,13 +8,13 @@ import SpaceBackground from '../../components/3d/SpaceBackground';
 import AsteroidField from '../../components/3d/AsteroidField';
 import FloatingParticles from '../../components/3d/FloatingParticles';
 import CosmicDustOverlay from '../../components/CosmicDustOverlay';
-import ArrayControls from '../../components/array/ArrayControls';
-import ArrayVisualization from '../../components/array/ArrayVisualization';
-import ArrayOperations from '../../components/array/ArrayOperations';
-import CodeDisplay from '../../components/CodeDisplay';
-import MemoryVisualization from '../../components/MemoryVisualization';
+import ArrayControls from './ArrayControls';
+import ArrayVisualization from './ArrayVisualization';
+import ArrayLogic from './ArrayLogic';
+import CodeDisplay from './CodeDisplay';
+import MemoryVisualization from './MemoryVisualization';
 import '../../styles/globals.css';
-import '../../components/array/ArrayStyles.css';
+import './ArrayStyles.css';
 
 const ArrayVisualizerPage = () => {
   const navigate = useNavigate();
@@ -120,16 +120,6 @@ const ArrayVisualizerPage = () => {
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Back to Array Info
           </button>
-          <motion.button
-            onClick={() => setSidebarOpen(true)}
-            disabled={isAnimating}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white px-6 py-3 rounded-xl text-sm font-medium transition-all flex items-center gap-2 shadow-lg"
-          >
-            <Settings className="w-4 h-4" />
-            Open Controls
-          </motion.button>
         </div>
       </div>
       <div className={`relative z-10 p-4 transition-all duration-300 ${sidebarOpen ? 'array-sidebar-overlay' : ''}`}>
@@ -168,7 +158,9 @@ const ArrayVisualizerPage = () => {
         setOperation={setOperation}
         isAnimating={isAnimating}
         isPlaying={isPlaying}
-        setIsPlaying={setIsPlaying}
+        onStart={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onReset={generateNewArray}
         speed={speed}
         setSpeed={setSpeed}
         searchValue={searchValue}
@@ -181,9 +173,11 @@ const ArrayVisualizerPage = () => {
         setInsertIndex={setInsertIndex}
         deleteIndex={deleteIndex}
         setDeleteIndex={setDeleteIndex}
-        generateNewArray={generateNewArray}
+        displayArray={displayArray}
+        currentElementIndex={currentElementIndex}
+        elementStates={elementStates}
       />
-      <ArrayOperations
+      <ArrayLogic
         operation={operation}
         isPlaying={isPlaying}
         speed={speed}
