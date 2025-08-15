@@ -39,7 +39,7 @@ class AnimationController {
    * @param {number} delayMultiplier - Multiply base speed by this factor
    */
   async syncStep(codeLineIndex, visualAction, memoryAction, stepDescription, delayMultiplier = 1) {
-    if (!this.isRunning) return false;
+    if (!this.isRunning || !this.callbacks) return false;
 
     try {
       // Update all panels simultaneously
@@ -63,7 +63,7 @@ class AnimationController {
    * Update element highlighting with proper state management
    */
   highlightElement(index, state = 'checking') {
-    if (!this.isRunning) return;
+    if (!this.isRunning || !this.callbacks) return;
     
     this.callbacks.setCurrentElementIndex(index);
     this.callbacks.setCurrentMemoryIndex(index);
@@ -77,7 +77,7 @@ class AnimationController {
    * Clear element highlighting
    */
   clearElementHighlight(index) {
-    if (!this.isRunning) return;
+    if (!this.isRunning || !this.callbacks) return;
     
     this.callbacks.setElementStates(prev => {
       const newStates = { ...prev };
@@ -90,7 +90,7 @@ class AnimationController {
    * Set multiple element states at once
    */
   setElementStates(states) {
-    if (!this.isRunning) return;
+    if (!this.isRunning || !this.callbacks) return;
     
     this.callbacks.setElementStates(prev => ({
       ...prev,
@@ -102,7 +102,7 @@ class AnimationController {
    * Update iteration counter for loops
    */
   setIteration(iteration) {
-    if (!this.isRunning) return;
+    if (!this.isRunning || !this.callbacks) return;
     
     this.callbacks.setCurrentIteration(iteration);
   }
@@ -111,16 +111,25 @@ class AnimationController {
    * Update stack frame for memory visualization
    */
   updateStackFrame(frame) {
-    if (!this.isRunning) return;
+    if (!this.isRunning || !this.callbacks) return;
     
     this.callbacks.setCurrentStackFrame(frame);
+  }
+
+  /**
+   * Update heap memory for memory visualization
+   */
+  updateHeapMemory(heapData) {
+    if (!this.isRunning || !this.callbacks) return;
+    
+    this.callbacks.setHeapMemory(heapData);
   }
 
   /**
    * Set found index for search operations
    */
   setFoundIndex(index) {
-    if (!this.isRunning) return;
+    if (!this.isRunning || !this.callbacks) return;
     
     this.callbacks.setFoundIndex(index);
   }
@@ -148,15 +157,26 @@ class AnimationController {
   reset() {
     this.stop();
     
-    // Reset all states to initial values
-    this.callbacks.setCurrentElementIndex(-1);
-    this.callbacks.setCurrentCodeLine(-1);
-    this.callbacks.setCurrentMemoryIndex(-1);
-    this.callbacks.setElementStates({});
-    this.callbacks.setCurrentIteration(-1);
-    this.callbacks.setAnimationStep('Ready for operation');
-    this.callbacks.setFoundIndex(-1);
-    this.callbacks.setCurrentStackFrame(null);
+    // Reset all states to initial values only if callbacks exist
+    if (this.callbacks) {
+      this.callbacks.setCurrentElementIndex(-1);
+      this.callbacks.setCurrentCodeLine(-1);
+      this.callbacks.setCurrentMemoryIndex(-1);
+      this.callbacks.setElementStates({});
+      this.callbacks.setCurrentIteration(-1);
+      this.callbacks.setAnimationStep('Ready for operation');
+      this.callbacks.setFoundIndex(-1);
+      this.callbacks.setCurrentStackFrame(null);
+    }
+  }
+
+  /**
+   * Cleanup method for component unmounting
+   */
+  cleanup() {
+    this.stop();
+    // Don't set callbacks to null immediately - let current operations finish
+    // this.callbacks = null;
   }
 }
 
