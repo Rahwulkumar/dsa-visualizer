@@ -7,6 +7,7 @@ import ArrayVisualizerPage from './pages/array/ArrayVisualizerPage';
 import LinkedListInfoPage from './pages/linkedlist/LinkedListInfoPage';
 import LinkedListVisualizerPage from './pages/linkedlist/LinkedListVisualizerPage';
 import StackInfoPage from './pages/stack/StackInfoPage';
+import StackVisualizerPage from './pages/stack/StackVisualizerPage';
 import QueueInfoPage from './pages/queue/QueueInfoPage';
 import TreeInfoPage from './pages/tree/TreeInfoPage';
 import GraphInfoPage from './pages/graph/GraphInfoPage';
@@ -28,6 +29,7 @@ function App() {
         <Route path="/linked-list-info" element={<LinkedListInfoPage />} />
         <Route path="/linked-list-visualizer" element={<LinkedListVisualizerPage />} />
         <Route path="/stack-info" element={<StackInfoPage />} />
+        <Route path="/stack-visualizer" element={<StackVisualizerPage />} />
         <Route path="/queue-info" element={<QueueInfoPage />} />
         <Route path="/tree-info" element={<TreeInfoPage />} />
         <Route path="/graph-info" element={<GraphInfoPage />} />

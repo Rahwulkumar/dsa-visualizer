@@ -181,7 +181,7 @@ const ArrayLogic = ({
           5,
           () => {},
           () => {},
-          `Returning index ${i}`,
+          `Returning index ${i}. Time Complexity: O(n) worst-case, O(1) best-case.`,
           1.0
         );
         
@@ -194,12 +194,14 @@ const ArrayLogic = ({
       }
     }
 
+    if (!animationController.isActive()) return;
+
     // Step 6: Not found
     await animationController.syncStep(
       6,
       () => {},
       () => {},
-      'Target not found in array',
+      'Target not found in array. Time Complexity: O(n)',
       1.2
     );
     
@@ -276,7 +278,7 @@ const ArrayLogic = ({
       4,
       () => {},
       () => {},
-      `✅ Accessed value ${displayArray[index]} at index ${index} - Time Complexity: O(1)`,
+      `✅ Accessed value ${displayArray[index]} at index ${index}. Time Complexity: O(1)`,
       1.5
     );
     
@@ -415,7 +417,7 @@ const ArrayLogic = ({
       5,
       () => {},
       () => {},
-      `✅ Insertion complete! Array size: ${newDisplayArray.length} - Time Complexity: O(n)`,
+      `✅ Insertion complete! Array size: ${newDisplayArray.length}. Time Complexity: O(n)`,
       1.5
     );
 
@@ -534,7 +536,7 @@ const ArrayLogic = ({
       5,
       () => {},
       () => {},
-      `✅ Deletion complete! Array size: ${newDisplayArray.length} - Time Complexity: O(n)`,
+      `✅ Deletion complete! Array size: ${newDisplayArray.length}. Time Complexity: O(n)`,
       1.5
     );
 

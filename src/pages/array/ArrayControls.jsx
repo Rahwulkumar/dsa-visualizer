@@ -127,11 +127,14 @@ const ArrayControls = ({
       {/* Toggle Button */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-20 right-6 z-50 bg-gradient-to-r from-cyan-500/90 to-blue-600/90 backdrop-blur-xl text-white p-4 rounded-full shadow-2xl border border-white/20 hover:shadow-cyan-500/50 transition-all duration-300"
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+        className="fixed top-20 right-6 z-50 bg-gradient-to-r from-cyan-500/90 to-blue-600/90 backdrop-blur-xl text-white px-6 py-3 rounded-full shadow-2xl border border-white/20 hover:shadow-cyan-500/50 transition-all duration-300 font-semibold"
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
       >
-        <Settings className="w-6 h-6" />
+        <span className="flex items-center gap-2">
+          <Settings className="w-5 h-5" />
+          Controls
+        </span>
       </motion.button>
 
       {/* Sidebar */}
