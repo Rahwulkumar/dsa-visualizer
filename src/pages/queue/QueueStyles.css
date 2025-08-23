@@ -1,0 +1,303 @@
+/* Queue-specific styles for DSA Visualizer - Enhanced Glass Theme */
+
+/* Enhanced Glass card effect for better visibility */
+.glass-card {
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Custom scrollbar for glass containers */
+.scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Enhanced range slider styling */
+.slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 12px;
+    border-radius: 6px;
+    outline: none;
+    background: linear-gradient(to right, #06b6d4 0%, #06b6d4 50%, #374151 50%, #374151 100%);
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #06b6d4, #3b82f6);
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+    transition: all 0.2s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(6, 182, 212, 0.6);
+}
+
+.slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #06b6d4, #3b82f6);
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+}
+
+/* Queue element base styles - now using Tailwind classes in component */
+.queue-element {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fira Code', monospace;
+    font-weight: 600;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    background: rgba(31, 41, 55, 0.8);
+    border: 2px solid rgba(75, 85, 99, 0.6);
+    color: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+/* Enhanced animation effects for queue operations */
+@keyframes queue-twinkle {
+    0%, 100% { 
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), 0 0 30px rgba(16, 185, 129, 0.2);
+        transform: scale(1.1);
+    }
+    50% { 
+        box-shadow: 0 0 25px rgba(16, 185, 129, 0.6), 0 0 50px rgba(16, 185, 129, 0.3);
+        transform: scale(1.15);
+    }
+}
+
+@keyframes queue-pulse-glow {
+    0%, 100% { 
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+    }
+    50% { 
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.6), 0 0 40px rgba(59, 130, 246, 0.3);
+    }
+}
+
+@keyframes queue-enqueue-slide {
+    0% { 
+        opacity: 0;
+        transform: translateX(100px) scale(0.8);
+    }
+    50% {
+        opacity: 0.7;
+        transform: translateX(0) scale(1.1);
+    }
+    100% { 
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+}
+
+@keyframes queue-dequeue-slide {
+    0% { 
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: translateX(-50px) scale(0.9);
+    }
+    100% { 
+        opacity: 0;
+        transform: translateX(-100px) scale(0.8);
+    }
+}
+
+@keyframes queue-peek-highlight {
+    0%, 100% { 
+        box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+        transform: scale(1);
+    }
+    50% { 
+        box-shadow: 0 0 25px rgba(6, 182, 212, 0.7), 0 0 50px rgba(6, 182, 212, 0.4);
+        transform: scale(1.1);
+    }
+}
+
+/* Queue direction indicator */
+.queue-direction-line {
+    position: relative;
+}
+
+.queue-direction-line::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(to right, #10b981, #3b82f6);
+    border-radius: 1px;
+    opacity: 0.6;
+}
+
+/* Enhanced sidebar for queue controls */
+.queue-sidebar-overlay .queue-controls-sidebar {
+    transform: translateX(0);
+}
+
+/* Responsive adjustments for queue visualization */
+@media (max-width: 768px) {
+    .queue-element {
+        min-width: 40px;
+        min-height: 40px;
+        font-size: 14px;
+    }
+    
+    .glass-card {
+        border-radius: 12px;
+        padding: 1rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .queue-element {
+        min-width: 36px;
+        min-height: 36px;
+        font-size: 12px;
+    }
+}
+
+/* Queue status indicators */
+.queue-front-indicator {
+    background: linear-gradient(135deg, #10b981, #059669);
+    border: 2px solid rgba(16, 185, 129, 0.5);
+    animation: queue-pulse-glow 2s ease-in-out infinite;
+}
+
+.queue-rear-indicator {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    border: 2px solid rgba(59, 130, 246, 0.5);
+    animation: queue-pulse-glow 2s ease-in-out infinite;
+}
+
+.queue-single-indicator {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    border: 2px solid rgba(139, 92, 246, 0.5);
+    animation: queue-twinkle 3s ease-in-out infinite;
+}
+
+/* Queue operation states */
+.queue-enqueuing {
+    animation: queue-enqueue-slide 0.8s ease-out;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-color: #10b981;
+}
+
+.queue-dequeuing {
+    animation: queue-dequeue-slide 0.8s ease-out;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border-color: #ef4444;
+}
+
+.queue-peeking {
+    animation: queue-peek-highlight 1.5s ease-in-out infinite;
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
+    border-color: #06b6d4;
+}
+
+.queue-displaying {
+    animation: queue-pulse-glow 1s ease-in-out infinite;
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    border-color: #8b5cf6;
+}
+
+/* Memory visualization enhancements for queue */
+.queue-memory-block {
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 8px;
+    padding: 12px;
+    transition: all 0.3s ease;
+}
+
+.queue-memory-block:hover {
+    background: rgba(139, 92, 246, 0.2);
+    border-color: rgba(139, 92, 246, 0.5);
+    transform: translateY(-2px);
+}
+
+/* Code highlighting specific to queue operations */
+.queue-code-highlight {
+    background: linear-gradient(to right, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1));
+    border-left: 4px solid #8b5cf6;
+    animation: queue-pulse-glow 2s ease-in-out infinite;
+}
+
+/* Queue visualization container */
+.queue-visualization-container {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.9));
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 20px;
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Enhanced button styles for queue controls */
+.queue-control-button {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.8), rgba(124, 58, 237, 0.8));
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    border-radius: 12px;
+    padding: 12px 24px;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.queue-control-button:hover {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 1), rgba(124, 58, 237, 1));
+    border-color: rgba(139, 92, 246, 0.8);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+}
+
+.queue-control-button:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);
+}
+
+/* Disabled state for queue controls */
+.queue-control-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.queue-control-button:disabled:hover {
+    transform: none;
+    box-shadow: none;
+}

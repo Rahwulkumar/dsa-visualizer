@@ -1,37 +1,35 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+// eslint-disable-next-line no-unused-vars
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Settings } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
 import { Stars, OrbitControls } from '@react-three/drei';
 import SpaceBackground from '../../components/3d/SpaceBackground';
 import AsteroidField from '../../components/3d/AsteroidField';
 import FloatingParticles from '../../components/3d/FloatingParticles';
 import CosmicDustOverlay from '../../components/CosmicDustOverlay';
-import QueueControls from './QueueControls';
-import QueueVisualization from './QueueVisualization';
-import QueueLogic from './QueueLogic';
+import SortingControls from './SortingControls';
+import SortingVisualization from './SortingVisualization';
+import SortingLogic from './SortingLogic';
 import CodeDisplay from './CodeDisplay';
 import MemoryVisualization from './MemoryVisualization';
 import '../../styles/globals.css';
-import './QueueStyles.css';
+import './SortingStyles.css';
 
-const QueueVisualizerPage = () => {
+const SortingVisualizerPage = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [queueSize, setQueueSize] = useState(6);
-  const [displayQueue, setDisplayQueue] = useState([]);
-  const [memoryQueue, setMemoryQueue] = useState([]);
+  const [arraySize, setArraySize] = useState(6);
+  const [displayArray, setDisplayArray] = useState([]);
+  const [memoryArray, setMemoryArray] = useState([]);
   // eslint-disable-next-line no-unused-vars
-  const [originalQueue, setOriginalQueue] = useState([]);
+  const [originalArray, setOriginalArray] = useState([]);
   const [codeLanguage, setCodeLanguage] = useState('python');
-  const [operation, setOperation] = useState('enqueue');
+  const [operation, setOperation] = useState('bubbleSort');
   const [isAnimating, setIsAnimating] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState(1000);
-  const [enqueueValue, setEnqueueValue] = useState('');
-  const [peekValue, setPeekValue] = useState(null);
-  const [front, setFront] = useState(0);
-  const [rear, setRear] = useState(-1);
   const [currentElementIndex, setCurrentElementIndex] = useState(-1);
   const [currentCodeLine, setCurrentCodeLine] = useState(-1);
   const [currentMemoryIndex, setCurrentMemoryIndex] = useState(-1);
@@ -40,66 +38,77 @@ const QueueVisualizerPage = () => {
   // eslint-disable-next-line no-unused-vars
   const [foundIndex, setFoundIndex] = useState(-1);
   const [heapMemory, setHeapMemory] = useState({
-    queueObject: { address: '0x7f8b1c000000', size: 0, data: [], front: 0, rear: -1 },
+    arrayObject: { address: '0x7f8b1c000000', size: 0, data: [] },
     elements: []
   });
   const [currentStackFrame, setCurrentStackFrame] = useState(null);
   const [currentIteration, setCurrentIteration] = useState(-1);
+  const [comparisons, setComparisons] = useState(0);
+  const [swaps, setSwaps] = useState(0);
 
-  const generateNewQueue = useCallback(() => {
-    const newQueue = Array.from({ length: Math.min(queueSize, 8) }, () =>
+  const generateNewArray = useCallback(() => {
+    const newArray = Array.from({ length: Math.min(arraySize, 10) }, () =>
       Math.floor(Math.random() * 100)
     );
-    setDisplayQueue(newQueue);
-    setMemoryQueue(newQueue);
-    setOriginalQueue(newQueue);
+    setDisplayArray(newArray);
+    setMemoryArray(newArray);
+    setOriginalArray(newArray);
     setElementStates({});
     setCurrentElementIndex(-1);
     setCurrentCodeLine(-1);
     setCurrentMemoryIndex(-1);
-    setAnimationStep('New queue generated');
+    setAnimationStep('New array generated');
     setFoundIndex(-1);
     setCurrentStackFrame(null);
     setCurrentIteration(-1);
-    setFront(0);
-    setRear(newQueue.length - 1);
-    setPeekValue(newQueue.length > 0 ? newQueue[0] : null);
+    setComparisons(0);
+    setSwaps(0);
     setHeapMemory({
-      queueObject: { 
-        address: '0x7f8b1c000000', 
-        size: newQueue.length, 
-        data: newQueue, 
-        front: 0, 
-        rear: newQueue.length - 1 
-      },
-      elements: newQueue.map((value, index) => ({
+      arrayObject: { address: '0x7f8b1c000000', size: newArray.length, data: newArray },
+      elements: newArray.map((value, index) => ({
         address: `0x${(parseInt('7f8b1c000000', 16) + index * 4).toString(16)}`,
         value
       }))
     });
-  }, [queueSize]);
+  }, [arraySize]);
 
   const initializeMemoryModel = useCallback(() => {
     setHeapMemory({
-      queueObject: { 
-        address: '0x7f8b1c000000', 
-        size: displayQueue.length, 
-        data: displayQueue, 
-        front: front, 
-        rear: rear 
-      },
-      elements: displayQueue.map((value, index) => ({
+      arrayObject: { address: '0x7f8b1c000000', size: displayArray.length, data: displayArray },
+      elements: displayArray.map((value, index) => ({
         address: `0x${(parseInt('7f8b1c000000', 16) + index * 4).toString(16)}`,
         value
       }))
     });
     setCurrentStackFrame(null);
-  }, [displayQueue, front, rear]);
+  }, [displayArray]);
 
-  // Fix infinite render loop by using useEffect with proper dependencies
+  // Initialize with a default array on mount and when arraySize changes
   useEffect(() => {
-    generateNewQueue();
-  }, [generateNewQueue]); // Only run when generateNewQueue changes
+    const newArray = Array.from({ length: Math.min(arraySize, 10) }, () =>
+      Math.floor(Math.random() * 100)
+    );
+    setDisplayArray(newArray);
+    setMemoryArray(newArray);
+    setOriginalArray(newArray);
+    setElementStates({});
+    setCurrentElementIndex(-1);
+    setCurrentCodeLine(-1);
+    setCurrentMemoryIndex(-1);
+    setAnimationStep('New array generated');
+    setFoundIndex(-1);
+    setCurrentStackFrame(null);
+    setCurrentIteration(-1);
+    setComparisons(0);
+    setSwaps(0);
+    setHeapMemory({
+      arrayObject: { address: '0x7f8b1c000000', size: newArray.length, data: newArray },
+      elements: newArray.map((value, index) => ({
+        address: `0x${(parseInt('7f8b1c000000', 16) + index * 4).toString(16)}`,
+        value
+      }))
+    });
+  }, [arraySize]); // Only depend on arraySize changes
 
   // Memoize the Canvas to prevent re-mounting
   const memoizedCanvas = useMemo(() => (
@@ -129,15 +138,15 @@ const QueueVisualizerPage = () => {
       <div className="relative z-10 p-6">
         <div className="flex justify-between items-center">
           <button
-            onClick={() => navigate('/queue-info')}
+            onClick={() => navigate('/sorting-info')}
             className="text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-2 group"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            Back to Queue Info
+            Back to Sorting Info
           </button>
         </div>
       </div>
-      <div className={`relative z-10 p-4 transition-all duration-300 ${sidebarOpen ? 'queue-sidebar-overlay' : ''}`}>
+      <div className={`relative z-10 p-4 transition-all duration-300 ${sidebarOpen ? 'sorting-sidebar-overlay' : ''}`}>
         <div className="max-w-[1600px] mx-auto grid grid-cols-12 gap-4 h-[calc(100vh-200px)]">
           <CodeDisplay
             codeLanguage={codeLanguage}
@@ -146,13 +155,13 @@ const QueueVisualizerPage = () => {
             animationStep={animationStep}
             currentIteration={currentIteration}
           />
-          <QueueVisualization
-            displayQueue={displayQueue}
+          <SortingVisualization
+            displayArray={displayArray}
             currentElementIndex={currentElementIndex}
             elementStates={elementStates}
             codeLanguage={codeLanguage}
-            front={front}
-            rear={rear}
+            comparisons={comparisons}
+            swaps={swaps}
           />
           <MemoryVisualization
             stackMemory={currentStackFrame}
@@ -164,11 +173,11 @@ const QueueVisualizerPage = () => {
           />
         </div>
       </div>
-      <QueueControls
+      <SortingControls
         isOpen={sidebarOpen}
         setIsOpen={setSidebarOpen}
-        queueSize={queueSize}
-        setQueueSize={setQueueSize}
+        arraySize={arraySize}
+        setArraySize={setArraySize}
         codeLanguage={codeLanguage}
         setCodeLanguage={setCodeLanguage}
         operation={operation}
@@ -177,34 +186,28 @@ const QueueVisualizerPage = () => {
         isPlaying={isPlaying}
         onStart={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
-        onReset={generateNewQueue}
+        onReset={generateNewArray}
         speed={speed}
         setSpeed={setSpeed}
-        enqueueValue={enqueueValue}
-        setEnqueueValue={setEnqueueValue}
-        peekValue={peekValue}
-        displayQueue={displayQueue}
+        displayArray={displayArray}
         currentElementIndex={currentElementIndex}
         elementStates={elementStates}
-        front={front}
-        rear={rear}
+        comparisons={comparisons}
+        swaps={swaps}
       />
-      <QueueLogic
+      <SortingLogic
         operation={operation}
         isPlaying={isPlaying}
         speed={speed}
-        enqueueValue={enqueueValue}
-        displayQueue={displayQueue}
-        memoryQueue={memoryQueue}
+        displayArray={displayArray}
+        memoryArray={memoryArray}
         codeLanguage={codeLanguage}
-        queueSize={queueSize}
-        front={front}
-        rear={rear}
+        arraySize={arraySize}
         setIsAnimating={setIsAnimating}
         setIsPlaying={setIsPlaying}
-        setDisplayQueue={setDisplayQueue}
-        setMemoryQueue={setMemoryQueue}
-        setOriginalQueue={setOriginalQueue}
+        setDisplayArray={setDisplayArray}
+        setMemoryArray={setMemoryArray}
+        setOriginalArray={setOriginalArray}
         setCurrentElementIndex={setCurrentElementIndex}
         setCurrentCodeLine={setCurrentCodeLine}
         setCurrentMemoryIndex={setCurrentMemoryIndex}
@@ -214,9 +217,8 @@ const QueueVisualizerPage = () => {
         setHeapMemory={setHeapMemory}
         setCurrentStackFrame={setCurrentStackFrame}
         setCurrentIteration={setCurrentIteration}
-        setFront={setFront}
-        setRear={setRear}
-        setPeekValue={setPeekValue}
+        setComparisons={setComparisons}
+        setSwaps={setSwaps}
         initializeMemoryModel={initializeMemoryModel}
         isAnimating={isAnimating}
       />
@@ -224,4 +226,4 @@ const QueueVisualizerPage = () => {
   );
 };
 
-export default QueueVisualizerPage;
+export default SortingVisualizerPage;

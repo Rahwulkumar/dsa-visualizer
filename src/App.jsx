@@ -9,12 +9,14 @@ import LinkedListVisualizerPage from './pages/linkedlist/LinkedListVisualizerPag
 import StackInfoPage from './pages/stack/StackInfoPage';
 import StackVisualizerPage from './pages/stack/StackVisualizerPage';
 import QueueInfoPage from './pages/queue/QueueInfoPage';
+import QueueVisualizerPage from './pages/queue/QueueVisualizerPage';
 import TreeInfoPage from './pages/tree/TreeInfoPage';
 import GraphInfoPage from './pages/graph/GraphInfoPage';
 import HashTableInfoPage from './pages/hashtable/HashTableInfoPage';
 import HeapInfoPage from './pages/heap/HeapInfoPage';
 import TrieInfoPage from './pages/trie/TrieInfoPage';
 import SortingInfoPage from './pages/sorting/SortingInfoPage';
+import SortingVisualizerPage from './pages/sorting/SortingVisualizerPage';
 import SearchingInfoPage from './pages/searching/SearchingInfoPage';
 import './styles/globals.css';
 
@@ -31,12 +33,14 @@ function App() {
         <Route path="/stack-info" element={<StackInfoPage />} />
         <Route path="/stack-visualizer" element={<StackVisualizerPage />} />
         <Route path="/queue-info" element={<QueueInfoPage />} />
+        <Route path="/queue-visualizer" element={<QueueVisualizerPage />} />
         <Route path="/tree-info" element={<TreeInfoPage />} />
         <Route path="/graph-info" element={<GraphInfoPage />} />
         <Route path="/hash-table-info" element={<HashTableInfoPage />} />
         <Route path="/heap-info" element={<HeapInfoPage />} />
         <Route path="/trie-info" element={<TrieInfoPage />} />
         <Route path="/sorting-info" element={<SortingInfoPage />} />
+        <Route path="/sorting-visualizer" element={<SortingVisualizerPage />} />
         <Route path="/searching-info" element={<SearchingInfoPage />} />
       </Routes>
     </div>

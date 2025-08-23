@@ -152,6 +152,13 @@ class AnimationController {
   }
 
   /**
+   * Simple wait method for animations - alias for delay()
+   */
+  wait(multiplier = 1) {
+    return this.delay(multiplier);
+  }
+
+  /**
    * Reset all animation states
    */
   reset() {
@@ -159,14 +166,14 @@ class AnimationController {
     
     // Reset all states to initial values only if callbacks exist
     if (this.callbacks) {
-      this.callbacks.setCurrentElementIndex(-1);
-      this.callbacks.setCurrentCodeLine(-1);
-      this.callbacks.setCurrentMemoryIndex(-1);
-      this.callbacks.setElementStates({});
-      this.callbacks.setCurrentIteration(-1);
-      this.callbacks.setAnimationStep('Ready for operation');
-      this.callbacks.setFoundIndex(-1);
-      this.callbacks.setCurrentStackFrame(null);
+      if (this.callbacks.setCurrentElementIndex) this.callbacks.setCurrentElementIndex(-1);
+      if (this.callbacks.setCurrentCodeLine) this.callbacks.setCurrentCodeLine(-1);
+      if (this.callbacks.setCurrentMemoryIndex) this.callbacks.setCurrentMemoryIndex(-1);
+      if (this.callbacks.setElementStates) this.callbacks.setElementStates({});
+      if (this.callbacks.setCurrentIteration) this.callbacks.setCurrentIteration(-1);
+      if (this.callbacks.setAnimationStep) this.callbacks.setAnimationStep('Ready for operation');
+      if (this.callbacks.setFoundIndex) this.callbacks.setFoundIndex(-1);
+      if (this.callbacks.setCurrentStackFrame) this.callbacks.setCurrentStackFrame(null);
     }
   }
 
