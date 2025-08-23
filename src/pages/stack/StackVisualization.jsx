@@ -14,11 +14,11 @@ const StackVisualization = ({ stack, elementStates, currentElementIndex, maxSize
       if (elementIds.has(key)) {
         newIds.set(key, elementIds.get(key));
       } else {
-        newIds.set(key, `stack-element-${Date.now()}-${Math.random()}`);
+        newIds.set(key, `stack-element-${Date.now()}-${Math.random().toString(36).slice(2)}`);
       }
     });
     setElementIds(newIds);
-  }, [stack.length, elementIds]);
+  }, [stack]);
 
   const getElementStyle = (index) => {
     const state = elementStates[index];
@@ -26,13 +26,13 @@ const StackVisualization = ({ stack, elementStates, currentElementIndex, maxSize
 
     switch (state) {
       case 'pushing':
-        className = 'bg-green-600/90 border-green-400 text-white shadow-lg shadow-green-500/30';
+        className = 'bg-green-600/90 border-green-400 text-white shadow-lg shadow-green-500/30 animate-twinkle';
         break;
       case 'popping':
-        className = 'bg-red-600/90 border-red-400 text-white shadow-lg shadow-red-500/30';
+        className = 'bg-red-600/90 border-red-400 text-white shadow-lg shadow-red-500/30 animate-pulse-glow';
         break;
       case 'peeking':
-        className = 'bg-cyan-600/90 border-cyan-400 text-white shadow-lg shadow-cyan-500/30';
+        className = 'bg-cyan-600/90 border-cyan-400 text-white shadow-lg shadow-cyan-500/30 animate-pulse-glow';
         break;
       default:
         if (currentElementIndex === index) {
@@ -92,7 +92,7 @@ const StackVisualization = ({ stack, elementStates, currentElementIndex, maxSize
                   layout
                   role="listitem"
                   tabIndex={0}
-                  aria-label={`Stack element ${index + 1}: value ${value}${currentElementIndex === index ? ', currently highlighted' : ''}${elementStates[index] ? `, ${elementStates[index]}` : ''}`}
+                  aria-label={`Stack element at index ${index}: value ${value}${currentElementIndex === index ? ', currently highlighted' : ''}${elementStates[index] ? `, status: ${elementStates[index]}` : ''}`}
                   initial={{ opacity: 0, y: -60, scale: 0.8 }}
                   animate={{ 
                     opacity: 1, 
@@ -115,7 +115,7 @@ const StackVisualization = ({ stack, elementStates, currentElementIndex, maxSize
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      // Could trigger element-specific actions here
+                      // Could add voice announcement or zoom here for accessibility
                     }
                   }}
                 >

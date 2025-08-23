@@ -109,7 +109,7 @@ int peek(Stack *s) {
 };
 
 const CodeDisplay = ({ codeLanguage, operation, currentCodeLine, animationStep }) => {
-  const code = codeTemplates[codeLanguage][operation];
+  const code = codeTemplates[codeLanguage][operation] || '// Code not available';
   
   const complexityInfo = {
     push: { time: 'O(1)', space: 'O(1)', description: 'Constant time insertion at top' },
@@ -118,9 +118,9 @@ const CodeDisplay = ({ codeLanguage, operation, currentCodeLine, animationStep }
   };
 
   return (
-    <div className="col-span-3 flex flex-col glass-card p-6 h-full bg-gradient-to-br from-gray-900/90 to-purple-900/90 backdrop-blur-xl border border-gray-700/50">
+    <div className="col-span-3 flex flex-col glass-card p-6 h-full bg-gradient-to-br from-gray-900/90 to-purple-900/90 backdrop-blur-xl border border-gray-700/50" role="region" aria-labelledby="code-title">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-xl font-bold text-white flex items-center gap-2">
+        <h3 id="code-title" className="text-xl font-bold text-white flex items-center gap-2">
           <span className="w-3 h-3 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full"></span>
           {codeLanguage.toUpperCase()} - {operation.charAt(0).toUpperCase() + operation.slice(1)}
         </h3>
@@ -138,14 +138,14 @@ const CodeDisplay = ({ codeLanguage, operation, currentCodeLine, animationStep }
       </div>
       <p className="text-xs text-gray-400 mb-3">{complexityInfo[operation].description}</p>
       
-      <div className="flex-1 overflow-auto">
+      <div className="flex-1 overflow-auto scrollbar-thin" role="code" aria-label="Code snippet with highlighted line">
         <SyntaxHighlighter
           language={codeLanguage === 'c' ? 'c' : codeLanguage}
           style={atomDark}
           showLineNumbers
           wrapLines
           lineNumberStyle={{ color: '#6b7280' }}
-          lineProps={lineNumber => {
+          lineProps={(lineNumber) => {
             const style = { 
               display: 'block',
               width: '100%',
@@ -177,8 +177,6 @@ CodeDisplay.propTypes = {
 };
 
 CodeDisplay.defaultProps = {
-  codeLanguage: 'python',
-  operation: 'push',
   currentCodeLine: -1,
   animationStep: 'Ready for operation'
 };
