@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
@@ -31,6 +30,10 @@ const StackVisualizerPage = () => {
   const [currentCodeLine, setCurrentCodeLine] = useState(-1);
   const [elementStates, setElementStates] = useState({});
   const [animationStep, setAnimationStep] = useState('Ready for operation');
+  const [currentMemoryIndex, setCurrentMemoryIndex] = useState(-1);
+  const [currentIteration, setCurrentIteration] = useState(-1);
+  const [currentStackFrame, setCurrentStackFrame] = useState(null);
+  const [heapMemory, setHeapMemory] = useState({ stackObject: { address: '0x7f8b1c000000', size: 0, data: [] }, elements: [] });
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -138,9 +141,11 @@ const StackVisualizerPage = () => {
               maxSize={maxSize}
             />
             <MemoryVisualization 
-              stack={stack}
-              top={stack.length - 1}
-              maxSize={maxSize}
+              stackMemory={currentStackFrame}
+              heapMemory={heapMemory}
+              currentMemoryIndex={currentMemoryIndex}
+              elementStates={elementStates}
+              currentStackFrame={currentStackFrame}
               codeLanguage={codeLanguage}
             />
           </div>
@@ -163,11 +168,12 @@ const StackVisualizerPage = () => {
         onReset={initializeStack}
         speed={speed}
         setSpeed={setSpeed}
-        pushValue={pushValue}
-        setPushValue={setPushValue}
-        stack={stack}
-        elementStates={elementStates}
-        currentElementIndex={currentElementIndex}
+  pushValue={pushValue}
+  setPushValue={setPushValue}
+  stack={stack}
+  elementStates={elementStates}
+  currentElementIndex={currentElementIndex}
+  top={stack.length - 1}
       />
       
       <StackLogic 
@@ -184,6 +190,10 @@ const StackVisualizerPage = () => {
         setCurrentCodeLine={setCurrentCodeLine}
         setElementStates={setElementStates}
         setAnimationStep={setAnimationStep}
+        setCurrentMemoryIndex={setCurrentMemoryIndex}
+        setCurrentIteration={setCurrentIteration}
+        setCurrentStackFrame={setCurrentStackFrame}
+        setHeapMemory={setHeapMemory}
       />
     </div>
   );

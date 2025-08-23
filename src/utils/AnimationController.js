@@ -64,13 +64,15 @@ class AnimationController {
    */
   highlightElement(index, state = 'checking') {
     if (!this.isRunning || !this.callbacks) return;
-    
-    this.callbacks.setCurrentElementIndex(index);
-    this.callbacks.setCurrentMemoryIndex(index);
-    this.callbacks.setElementStates(prev => ({
-      ...prev,
-      [index]: state
-    }));
+
+    if (this.callbacks.setCurrentElementIndex) this.callbacks.setCurrentElementIndex(index);
+    if (this.callbacks.setCurrentMemoryIndex) this.callbacks.setCurrentMemoryIndex(index);
+    if (this.callbacks.setElementStates) {
+      this.callbacks.setElementStates(prev => ({
+        ...prev,
+        [index]: state
+      }));
+    }
   }
 
   /**

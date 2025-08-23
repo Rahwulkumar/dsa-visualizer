@@ -1,184 +1,106 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Code } from 'lucide-react';
+import '../../styles/globals.css';
 
-const codeTemplates = {
-  python: {
-    push: `class Stack:
-    def __init__(self, capacity):
-        self.stack = []
-        self.capacity = capacity
+// Explicit IDs will be added to key elements for testing and accessibility
+const CodeDisplay = ({ codeLanguage, operation, currentCodeLine, animationStep, currentIteration }) => {
+  const [tooltip, setTooltip] = useState({ show: false, content: '', x: 0, y: 0 });
 
-    def push(self, item):
-        if len(self.stack) == self.capacity:
-            raise Exception("Stack Overflow")
-        self.stack.append(item)
-`,
-    pop: `class Stack:
-    # ... (other methods)
-    def pop(self):
-        if not self.stack:
-            raise Exception("Stack Underflow")
-        return self.stack.pop()
-`,
-    peek: `class Stack:
-    # ... (other methods)
-    def peek(self):
-        if not self.stack:
-            return None
-        return self.stack[-1]
-`,
-  },
-  java: {
-    push: `public class Stack {
-    private int[] stack;
-    private int top;
-    private int capacity;
-
-    public Stack(int capacity) {
-        this.capacity = capacity;
-        stack = new int[capacity];
-        top = -1;
+  const codeTemplates = {
+    python: {
+      push: ['def push(stack, value):', '    if len(stack) == capacity:', '        raise Exception("Stack Overflow")', '    stack.append(value)', '    # push complete'],
+      pop: ['def pop(stack):', '    if not stack:', '        raise Exception("Stack Underflow")', '    return stack.pop()', '    # pop complete'],
+      peek: ['def peek(stack):', '    if not stack:', '        return None', '    return stack[-1]', '    # peek complete']
+    },
+    java: {
+      push: ['public void push(int item) {', '    if (top == capacity - 1) {', '        throw new StackOverflowError();', '    }', '    stack[++top] = item;', '}'],
+      pop: ['public int pop() {', '    if (top == -1) {', '        throw new EmptyStackException();', '    }', '    return stack[top--];', '}'],
+      peek: ['public int peek() {', '    if (top == -1) {', '        throw new EmptyStackException();', '    }', '    return stack[top];', '}']
+    },
+    c: {
+      push: ['void push(Stack *s, int item) {', '    if (s->top == MAX_SIZE - 1) {', '        printf("Stack Overflow\\n");', '        return;', '    }', '    s->items[++(s->top)] = item;', '}'],
+      pop: ['int pop(Stack *s) {', '    if (s->top == -1) {', '        printf("Stack Underflow\\n");', '        return -1;', '    }', '    return s->items[(s->top)--];', '}'],
+      peek: ['int peek(Stack *s) {', '    if (s->top == -1) {', '        printf("Stack is empty\\n");', '        return -1;', '    }', '    return s->items[s->top];', '}']
     }
-
-    public void push(int item) {
-        if (top == capacity - 1) {
-            throw new StackOverflowError("Stack Overflow");
-        }
-        stack[++top] = item;
-    }
-`,
-    pop: `public class Stack {
-    // ... (other methods)
-    public int pop() {
-        if (top == -1) {
-            throw new EmptyStackException();
-        }
-        return stack[top--];
-    }
-`,
-    peek: `public class Stack {
-    // ... (other methods)
-    public int peek() {
-        if (top == -1) {
-            throw new EmptyStackException();
-        }
-        return stack[top];
-    }
-`,
-  },
-  c: {
-    push: `#include <stdio.h>
-#include <stdlib.h>
-
-#define MAX_SIZE 10
-
-typedef struct {
-    int items[MAX_SIZE];
-    int top;
-} Stack;
-
-void push(Stack *s, int item) {
-    if (s->top == MAX_SIZE - 1) {
-        printf("Stack Overflow\\n");
-        return;
-    }
-    s->items[++(s->top)] = item;
-}
-`,
-    pop: `// ... (other code)
-int pop(Stack *s) {
-    if (s->top == -1) {
-        printf("Stack Underflow\\n");
-        return -1; // Error code
-    }
-    return s->items[(s->top)--];
-}
-`,
-    peek: `// ... (other code)
-int peek(Stack *s) {
-    if (s->top == -1) {
-        printf("Stack is empty\\n");
-        return -1; // Error code
-    }
-    return s->items[s->top];
-}
-`,
-  },
-};
-
-const CodeDisplay = ({ codeLanguage, operation, currentCodeLine, animationStep }) => {
-  const code = codeTemplates[codeLanguage][operation] || '// Code not available';
-  
-  const complexityInfo = {
-    push: { time: 'O(1)', space: 'O(1)', description: 'Constant time insertion at top' },
-    pop: { time: 'O(1)', space: 'O(1)', description: 'Constant time removal from top' },
-    peek: { time: 'O(1)', space: 'O(1)', description: 'Constant time access to top element' }
   };
 
+  const codeExplanations = {
+    push: {
+      0: 'Define push function',
+      1: 'Check for overflow condition',
+      2: 'Handle overflow by raising/printing error',
+      3: 'Add element to top of stack',
+      4: 'Push operation complete'
+    },
+    pop: {
+      0: 'Define pop function',
+      1: 'Check for underflow/empty stack',
+      2: 'Handle underflow',
+      3: 'Remove and return top element',
+      4: 'Pop operation complete'
+    },
+    peek: {
+      0: 'Define peek function',
+      1: 'Check for empty stack',
+      2: 'Handle empty',
+      3: 'Return top element',
+      4: 'Peek operation complete'
+    }
+  };
+
+  const showTooltip = (content, event) => {
+    setTooltip({ show: true, content, x: event.clientX + 10, y: event.clientY - 10 });
+  };
+
+  const hideTooltip = () => setTooltip({ show: false, content: '', x: 0, y: 0 });
+
+  const lines = (codeTemplates[codeLanguage] && codeTemplates[codeLanguage][operation]) || ['// Code not available'];
+
   return (
-    <div className="col-span-3 flex flex-col glass-card p-6 h-full bg-gradient-to-br from-gray-900/90 to-purple-900/90 backdrop-blur-xl border border-gray-700/50" role="region" aria-labelledby="code-title">
-      <div className="flex items-center justify-between mb-6">
-        <h3 id="code-title" className="text-xl font-bold text-white flex items-center gap-2">
-          <span className="w-3 h-3 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full"></span>
-          {codeLanguage.toUpperCase()} - {operation.charAt(0).toUpperCase() + operation.slice(1)}
-        </h3>
-        <span className="text-sm text-gray-300 bg-gray-800/50 px-3 py-1 rounded-full">
-          Code View
-        </span>
+  <div id="stack-codedisplay" className="col-span-3 flex flex-col glass-card p-4 h-full" role="region" aria-labelledby="stack-code-title">
+      <h3 id="stack-code-title" className="text-lg font-bold text-white flex items-center gap-2">
+        <Code className="w-5 h-5 text-cyan-400" />
+        <span id="stack-code-language">Code ({codeLanguage.toUpperCase()})</span>
+      </h3>
+
+  <div id="stack-code-box" className="bg-gray-900/90 rounded-lg p-4 font-mono text-sm flex-1 overflow-auto scrollbar-thin">
+        {lines.map((line, index) => (
+          <motion.div
+            id={`stack-code-line-${index}`}
+            key={index}
+            className={`py-1 px-2 rounded transition-all duration-300 ${currentCodeLine === index ? 'bg-cyan-500/30 border-l-4 border-cyan-400 text-cyan-100' : 'text-gray-300'}`}
+            animate={{ scale: currentCodeLine === index ? 1.02 : 1, x: currentCodeLine === index ? 8 : 0 }}
+            onMouseEnter={(e) => showTooltip(codeExplanations[operation]?.[index] || 'Code explanation', e)}
+            onMouseLeave={hideTooltip}
+          >
+            <span id={`stack-code-line-num-${index}`} className="text-gray-500 mr-3 w-6 inline-block text-right">{index + 1}</span>
+            <span id={`stack-code-line-text-${index}`}>{line}</span>
+          </motion.div>
+        ))}
       </div>
-      <div className="flex items-center gap-3 text-xs mb-3">
-        <span className="bg-green-900/50 text-green-300 px-2 py-1 rounded">
-          Time: {complexityInfo[operation].time}
-        </span>
-        <span className="bg-blue-900/50 text-blue-300 px-2 py-1 rounded">
-          Space: {complexityInfo[operation].space}
-        </span>
-      </div>
-      <p className="text-xs text-gray-400 mb-3">{complexityInfo[operation].description}</p>
-      
-      <div className="flex-1 overflow-auto scrollbar-thin" role="code" aria-label="Code snippet with highlighted line">
-        <SyntaxHighlighter
-          language={codeLanguage === 'c' ? 'c' : codeLanguage}
-          style={atomDark}
-          showLineNumbers
-          wrapLines
-          lineNumberStyle={{ color: '#6b7280' }}
-          lineProps={(lineNumber) => {
-            const style = { 
-              display: 'block',
-              width: '100%',
-              transition: 'background-color 0.3s ease-in-out',
-            };
-            if (lineNumber === currentCodeLine) {
-              style.backgroundColor = 'rgba(56, 189, 248, 0.2)';
-              style.boxShadow = 'inset 3px 0 0 0 #38bdf8';
-            }
-            return { style };
-          }}
+
+      {tooltip.show && (
+        <motion.div
+          id="stack-code-tooltip"
+          className="fixed bg-gray-800/90 text-white text-sm p-2 rounded shadow-lg z-50"
+          style={{ top: tooltip.y, left: tooltip.x }}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
         >
-          {code}
-        </SyntaxHighlighter>
-      </div>
-      <div className="mt-4 p-3 bg-gradient-to-r from-gray-800/80 to-gray-900/70 rounded-lg text-sm text-yellow-300/90 border border-white/10 font-mono shadow-inner">
-        <span className="font-bold text-yellow-200/90 mr-2">&gt;</span>
-        {animationStep}
+          {tooltip.content}
+        </motion.div>
+      )}
+
+      <div id="stack-code-status" className="mt-4 p-3 bg-gray-800/50 rounded-lg border border-gray-700/50">
+        <div id="stack-code-current-step" className="text-sm text-gray-300 mb-1">Current Step:</div>
+        <div id="stack-code-animation-step" className="text-cyan-300 font-medium">{animationStep}</div>
+        {typeof currentIteration === 'number' && currentIteration >= 0 && (
+          <div id="stack-code-iteration" className="text-xs text-gray-400 mt-1">Iteration: {currentIteration + 1}</div>
+        )}
       </div>
     </div>
   );
-};
-
-CodeDisplay.propTypes = {
-  codeLanguage: PropTypes.oneOf(['python', 'java', 'c']).isRequired,
-  operation: PropTypes.oneOf(['push', 'pop', 'peek']).isRequired,
-  currentCodeLine: PropTypes.number.isRequired,
-  animationStep: PropTypes.string.isRequired
-};
-
-CodeDisplay.defaultProps = {
-  currentCodeLine: -1,
-  animationStep: 'Ready for operation'
 };
 
 export default CodeDisplay;

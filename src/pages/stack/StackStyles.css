@@ -1,5 +1,245 @@
 /* Stack-specific styles for DSA Visualizer - Enhanced Glass Theme */
 
+.glass-card {
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 12px;
+    border-radius: 6px;
+    outline: none;
+    background: linear-gradient(to right, #06b6d4 0%, #06b6d4 50%, #374151 50%, #374151 100%);
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #06b6d4, #3b82f6);
+    cursor: pointer;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+    transition: all 0.2s ease;
+}
+
+@keyframes stack-twinkle {
+    0%, 100% { 
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.4), 0 0 30px rgba(139, 92, 246, 0.2);
+        transform: scale(1.05);
+    }
+    50% { 
+        box-shadow: 0 0 25px rgba(139, 92, 246, 0.6), 0 0 50px rgba(139, 92, 246, 0.3);
+        transform: scale(1.08);
+    }
+}
+
+@keyframes stack-pulse-glow {
+    0%, 100% { 
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+    }
+    50% { 
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.6), 0 0 40px rgba(59, 130, 246, 0.3);
+    }
+}
+
+@keyframes stack-push-slide {
+    0% { 
+        opacity: 0;
+        transform: translateY(40px) scale(0.9);
+    }
+    50% {
+        opacity: 0.7;
+        transform: translateY(0) scale(1.05);
+    }
+    100% { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes stack-pop-slide {
+    0% { 
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: translateY(-30px) scale(0.95);
+    }
+    100% { 
+        opacity: 0;
+        transform: translateY(-60px) scale(0.85);
+    }
+}
+
+@keyframes stack-peek-highlight {
+    0%, 100% { 
+        box-shadow: 0 0 15px rgba(6, 182, 212, 0.4);
+        transform: scale(1);
+    }
+    50% { 
+        box-shadow: 0 0 25px rgba(6, 182, 212, 0.7), 0 0 50px rgba(6, 182, 212, 0.4);
+        transform: scale(1.05);
+    }
+}
+
+.stack-direction-line::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(to right, #10b981, #3b82f6);
+    border-radius: 1px;
+    opacity: 0.6;
+}
+
+/* Layout utilities for stack visualizer page */
+.stack-visualizer-grid {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: stretch;
+}
+
+.stack-visualizer-grid > * {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Make glass cards fill available vertical space inside the grid */
+.glass-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+/* Responsive default columns for desktop: 3 / 6 / 3 */
+@media (min-width: 1025px) {
+    .stack-visualizer-grid .col-span-3 { grid-column: span 3 / span 3; }
+    .stack-visualizer-grid .col-span-6 { grid-column: span 6 / span 6; }
+}
+
+/* Small helper to center inner visualization and limit width */
+.stack-box-centered {
+    margin: 0 auto;
+    max-width: 720px;
+}
+
+@media (max-width: 768px) {
+    .glass-card {
+        border-radius: 12px;
+        padding: 1rem;
+    }
+}
+
+.stack-top-indicator {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    border: 2px solid rgba(139, 92, 246, 0.5);
+    animation: stack-twinkle 3s ease-in-out infinite;
+}
+
+.stack-pushing {
+    animation: stack-push-slide 0.8s ease-out;
+    background: linear-gradient(135deg, #10b981, #059669);
+    border-color: #10b981;
+}
+
+.stack-popping {
+    animation: stack-pop-slide 0.8s ease-out;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    border-color: #ef4444;
+}
+
+.stack-peeking {
+    animation: stack-peek-highlight 1.5s ease-in-out infinite;
+    background: linear-gradient(135deg, #06b6d4, #0891b2);
+    border-color: #06b6d4;
+}
+
+.stack-displaying {
+    animation: stack-pulse-glow 1s ease-in-out infinite;
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    border-color: #8b5cf6;
+}
+
+.stack-visualization-container {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(30, 41, 59, 0.9));
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 20px;
+    box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.stack-control-button {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.8), rgba(124, 58, 237, 0.8));
+    border: 1px solid rgba(139, 92, 246, 0.4);
+    border-radius: 12px;
+    padding: 12px 24px;
+    color: white;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.stack-control-button:hover {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 1), rgba(124, 58, 237, 1));
+    border-color: rgba(139, 92, 246, 0.8);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+}
+
+.stack-control-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.stack-memory-block {
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 8px;
+    padding: 12px;
+    transition: all 0.3s ease;
+}
+
+.stack-memory-block:hover {
+    background: rgba(139, 92, 246, 0.2);
+    border-color: rgba(139, 92, 246, 0.5);
+    transform: translateY(-2px);
+}
+
+.stack-code-highlight {
+    background: linear-gradient(to right, rgba(139, 92, 246, 0.2), rgba(139, 92, 246, 0.1));
+    border-left: 4px solid #8b5cf6;
+    animation: stack-pulse-glow 2s ease-in-out infinite;
+}
+/* Stack-specific styles for DSA Visualizer - Enhanced Glass Theme */
+
 /* Enhanced Glass card effect for better visibility */
 .glass-card {
     background: rgba(15, 23, 42, 0.85);
