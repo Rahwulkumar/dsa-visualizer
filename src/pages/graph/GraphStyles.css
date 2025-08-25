@@ -1,0 +1,431 @@
+/* Graph Visualizer Styles */
+
+/* Custom scrollbar for graph components */
+#graph-controls-content::-webkit-scrollbar,
+#graph-memory-content::-webkit-scrollbar,
+#graph-code-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+#graph-controls-content::-webkit-scrollbar-track,
+#graph-memory-content::-webkit-scrollbar-track,
+#graph-code-content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+#graph-controls-content::-webkit-scrollbar-thumb,
+#graph-memory-content::-webkit-scrollbar-thumb,
+#graph-code-content::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.5);
+  border-radius: 3px;
+  transition: all 0.3s ease;
+}
+
+#graph-controls-content::-webkit-scrollbar-thumb:hover,
+#graph-memory-content::-webkit-scrollbar-thumb:hover,
+#graph-code-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.8);
+}
+
+/* Graph visualization canvas styling */
+#graph-canvas {
+  transition: all 0.3s ease;
+  box-shadow: 
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+#graph-canvas:hover {
+  box-shadow: 
+    0 32px 64px -12px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Glass morphism effects for graph panels */
+#graph-left-panel {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.05) 100%
+  );
+  box-shadow: 
+    inset 1px 0 0 rgba(255, 255, 255, 0.1),
+    0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+#graph-right-panel {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Graph controls sidebar styling */
+#graph-controls-sidebar {
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  background: linear-gradient(
+    135deg,
+    rgba(17, 24, 39, 0.9) 0%,
+    rgba(30, 41, 59, 0.85) 50%,
+    rgba(17, 24, 39, 0.9) 100%
+  );
+  box-shadow: 
+    -5px 0 30px rgba(0, 0, 0, 0.3),
+    inset 1px 0 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Graph preview styling */
+#graph-preview {
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.3) 0%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Graph vertex preview styling */
+#graph-preview-content .graph-vertex-cell {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    0 2px 4px -1px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Animation states for graph elements */
+.graph-vertex-adding {
+  background: linear-gradient(135deg, #16a34a, #15803d) !important;
+  box-shadow: 
+    0 0 20px rgba(34, 197, 94, 0.5),
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  animation: graph-pulse-green 1.5s ease-in-out infinite;
+}
+
+.graph-vertex-traversing {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  box-shadow: 
+    0 0 20px rgba(37, 99, 235, 0.5),
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  animation: graph-pulse-blue 1.5s ease-in-out infinite;
+}
+
+.graph-vertex-searching {
+  background: linear-gradient(135deg, #0891b2, #0e7490) !important;
+  box-shadow: 
+    0 0 20px rgba(8, 145, 178, 0.5),
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  animation: graph-pulse-cyan 1.5s ease-in-out infinite;
+}
+
+.graph-vertex-connecting {
+  background: linear-gradient(135deg, #eab308, #ca8a04) !important;
+  box-shadow: 
+    0 0 20px rgba(234, 179, 8, 0.5),
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  animation: graph-pulse-yellow 1.5s ease-in-out infinite;
+}
+
+.graph-vertex-current {
+  background: linear-gradient(135deg, #9333ea, #7c3aed) !important;
+  box-shadow: 
+    0 0 25px rgba(147, 51, 234, 0.6),
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  animation: graph-pulse-purple 1s ease-in-out infinite;
+  transform: scale(1.1);
+}
+
+/* Pulse animations for different states */
+@keyframes graph-pulse-green {
+  0%, 100% { 
+    box-shadow: 
+      0 0 20px rgba(34, 197, 94, 0.5),
+      0 4px 6px -1px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  50% { 
+    box-shadow: 
+      0 0 30px rgba(34, 197, 94, 0.8),
+      0 6px 8px -1px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes graph-pulse-blue {
+  0%, 100% { 
+    box-shadow: 
+      0 0 20px rgba(37, 99, 235, 0.5),
+      0 4px 6px -1px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  50% { 
+    box-shadow: 
+      0 0 30px rgba(37, 99, 235, 0.8),
+      0 6px 8px -1px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes graph-pulse-cyan {
+  0%, 100% { 
+    box-shadow: 
+      0 0 20px rgba(8, 145, 178, 0.5),
+      0 4px 6px -1px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  50% { 
+    box-shadow: 
+      0 0 30px rgba(8, 145, 178, 0.8),
+      0 6px 8px -1px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes graph-pulse-yellow {
+  0%, 100% { 
+    box-shadow: 
+      0 0 20px rgba(234, 179, 8, 0.5),
+      0 4px 6px -1px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+  50% { 
+    box-shadow: 
+      0 0 30px rgba(234, 179, 8, 0.8),
+      0 6px 8px -1px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  }
+}
+
+@keyframes graph-pulse-purple {
+  0%, 100% { 
+    box-shadow: 
+      0 0 25px rgba(147, 51, 234, 0.6),
+      0 4px 6px -1px rgba(0, 0, 0, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+  }
+  50% { 
+    box-shadow: 
+      0 0 35px rgba(147, 51, 234, 0.9),
+      0 6px 8px -1px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    transform: scale(1.15);
+  }
+}
+
+/* Graph operation buttons styling */
+#graph-operation-section button {
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+#graph-operation-section button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.1),
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+#graph-operation-section button:hover::before {
+  left: 100%;
+}
+
+/* Graph controls toggle button */
+#graph-controls-toggle {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Graph input fields styling */
+#graph-controls-sidebar input[type="text"],
+#graph-controls-sidebar input[type="number"] {
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  background: linear-gradient(
+    135deg,
+    rgba(55, 65, 81, 0.5) 0%,
+    rgba(31, 41, 55, 0.5) 100%
+  );
+  border: 1px solid rgba(107, 114, 128, 0.5);
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.1),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+}
+
+#graph-controls-sidebar input[type="text"]:focus,
+#graph-controls-sidebar input[type="number"]:focus {
+  background: linear-gradient(
+    135deg,
+    rgba(55, 65, 81, 0.7) 0%,
+    rgba(31, 41, 55, 0.7) 100%
+  );
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.2),
+    0 0 0 3px rgba(99, 102, 241, 0.1),
+    0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Graph memory visualization styling */
+#graph-memory-section {
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.1) 0%,
+    rgba(0, 0, 0, 0.05) 100%
+  );
+}
+
+/* Graph legend styling */
+#graph-legend {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.4) 0%,
+    rgba(0, 0, 0, 0.2) 100%
+  );
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Graph status indicators */
+#graph-status {
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  background: linear-gradient(
+    135deg,
+    rgba(6, 182, 212, 0.1) 0%,
+    rgba(37, 99, 235, 0.1) 100%
+  );
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Graph operation status */
+#graph-operation-status {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  background: linear-gradient(
+    135deg,
+    rgba(6, 182, 212, 0.2) 0%,
+    rgba(37, 99, 235, 0.2) 100%
+  );
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Graph header styling */
+#graph-visualizer-header {
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  #graph-left-panel {
+    width: 400px;
+  }
+  
+  #graph-controls-sidebar {
+    width: 380px;
+  }
+}
+
+@media (max-width: 768px) {
+  #graph-left-panel {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  #graph-main-content {
+    flex-direction: column;
+  }
+  
+  #graph-controls-sidebar {
+    width: 100%;
+    height: 100vh;
+  }
+  
+  #graph-canvas {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  #graph-preview,
+  #graph-controls-sidebar,
+  #graph-legend {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+  
+  #graph-controls-sidebar input {
+    border: 2px solid rgba(255, 255, 255, 0.5);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  #graph-canvas,
+  #graph-operation-section button,
+  .graph-vertex-cell {
+    transition: none;
+  }
+  
+  .graph-vertex-adding,
+  .graph-vertex-traversing,
+  .graph-vertex-searching,
+  .graph-vertex-connecting,
+  .graph-vertex-current {
+    animation: none;
+  }
+}

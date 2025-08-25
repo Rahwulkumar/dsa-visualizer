@@ -11,7 +11,9 @@ import StackVisualizerPage from './pages/stack/StackVisualizerPage';
 import QueueInfoPage from './pages/queue/QueueInfoPage';
 import QueueVisualizerPage from './pages/queue/QueueVisualizerPage';
 import TreeInfoPage from './pages/tree/TreeInfoPage';
+import TreeVisualizerPage from './pages/tree/TreeVisualizerPage';
 import GraphInfoPage from './pages/graph/GraphInfoPage';
+import GraphVisualizerPage from './pages/graph/GraphVisualizerPage';
 import HashTableInfoPage from './pages/hashtable/HashTableInfoPage';
 import HeapInfoPage from './pages/heap/HeapInfoPage';
 import TrieInfoPage from './pages/trie/TrieInfoPage';
@@ -35,7 +37,9 @@ function App() {
         <Route path="/queue-info" element={<QueueInfoPage />} />
         <Route path="/queue-visualizer" element={<QueueVisualizerPage />} />
         <Route path="/tree-info" element={<TreeInfoPage />} />
+        <Route path="/tree-visualizer" element={<TreeVisualizerPage />} />
         <Route path="/graph-info" element={<GraphInfoPage />} />
+        <Route path="/graph-visualizer" element={<GraphVisualizerPage />} />
         <Route path="/hash-table-info" element={<HashTableInfoPage />} />
         <Route path="/heap-info" element={<HeapInfoPage />} />
         <Route path="/trie-info" element={<TrieInfoPage />} />
