@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -10,8 +10,7 @@ import CodeDisplay from './CodeDisplay';
 import MemoryVisualization from './MemoryVisualization';
 
 // Logic and Utils
-import GraphLogic from './GraphLogic';
-import AnimationController from '../../utils/AnimationController';
+import GraphOrchestrator from './GraphOrchestrator';
 
 // Styles
 import './GraphStyles.css';
@@ -26,6 +25,11 @@ const GraphVisualizerPage = () => {
   const [currentElementIndex, setCurrentElementIndex] = useState(-1);
   const [elementStates, setElementStates] = useState({});
   const [currentOperationState, setCurrentOperationState] = useState({});
+  // Code/memory state expected by GraphLogic
+  const [currentCodeLine, setCurrentCodeLine] = useState(-1);
+  const [animationStep, setAnimationStep] = useState('Ready');
+  const [currentIteration, setCurrentIteration] = useState(-1);
+  const [currentMemoryIndex, setCurrentMemoryIndex] = useState(-1);
   
   // Control state
   const [isControlsOpen, setIsControlsOpen] = useState(false);
@@ -42,147 +46,33 @@ const GraphVisualizerPage = () => {
   const [searchVertex, setSearchVertex] = useState('');
   const [startVertex, setStartVertex] = useState('');
   
-  // Refs
-  const graphLogicRef = useRef(null);
-  const animationControllerRef = useRef(null);
-  
-  // Initialize graph logic and animation controller
-  useEffect(() => {
-    // Initialize animation controller
-    animationControllerRef.current = new AnimationController();
-    
-    // Initialize graph logic
-    graphLogicRef.current = new GraphLogic();
-    graphLogicRef.current.setAnimationController(animationControllerRef.current);
-    
-    // Set up callbacks
-    graphLogicRef.current.initialize({
-      onStateUpdate: (state) => {
-        setGraph(state.graph);
-        setIsAnimating(state.isAnimating);
-        setCurrentElementIndex(state.currentElementIndex);
-        setElementStates(state.elementStates);
-        setCurrentOperationState(state.currentOperationState);
-        
-        if (!state.isAnimating) {
-          setIsPlaying(false);
-        }
-      },
-      onStepUpdate: (step, stepIndex, totalSteps) => {
-        // Update UI with step information
-        console.log(`Step ${stepIndex + 1}/${totalSteps}: ${step.message}`);
-      },
-      onComplete: () => {
-        setIsAnimating(false);
-        setIsPlaying(false);
-        console.log('Animation completed');
-      }
-    });
-    
-    // Set up animation controller
-    animationControllerRef.current.setSpeed(speed);
-    animationControllerRef.current.setStepFunction(() => {
-      if (graphLogicRef.current) {
-        graphLogicRef.current.executeStep();
-      }
-    });
-    
-    // Generate initial graph
-    graphLogicRef.current.generateRandomGraph(maxVertices);
-    
-    return () => {
-      if (animationControllerRef.current) {
-        animationControllerRef.current.cleanup();
-      }
-    };
-  }, []);
-  
-  // Update animation speed when speed changes
-  useEffect(() => {
-    if (animationControllerRef.current) {
-      animationControllerRef.current.setSpeed(speed);
-    }
-  }, [speed]);
-  
   // Handle operation start
   const handleStart = () => {
-    if (!graphLogicRef.current || isAnimating) return;
-    
-    let success = false;
-    
-    switch (operation) {
-      case 'addVertex':
-        success = graphLogicRef.current.addVertex(addVertexValue.trim());
-        if (success) {
-          setAddVertexValue('');
-        }
-        break;
-        
-      case 'addEdge':
-        const weight = parseInt(addEdgeWeight) || 1;
-        success = graphLogicRef.current.addEdge(
-          addEdgeFrom.trim(),
-          addEdgeTo.trim(),
-          weight
-        );
-        if (success) {
-          setAddEdgeFrom('');
-          setAddEdgeTo('');
-          setAddEdgeWeight('1');
-        }
-        break;
-        
-      case 'dfs':
-        success = graphLogicRef.current.dfs(startVertex.trim());
-        break;
-        
-      case 'bfs':
-        success = graphLogicRef.current.bfs(startVertex.trim());
-        break;
-        
-      case 'dijkstra':
-        success = graphLogicRef.current.dijkstra(startVertex.trim());
-        break;
-        
-      case 'mst':
-        success = graphLogicRef.current.mst();
-        break;
-        
-      default:
-        console.warn('Unknown operation:', operation);
-    }
-    
-    if (success) {
-      setIsPlaying(true);
-    }
+    if (isAnimating) return;
+    // GraphControls validates inputs; GraphLogic reacts to isPlaying+operation
+    setIsPlaying(true);
   };
   
   // Handle pause
   const handlePause = () => {
-    if (graphLogicRef.current) {
-      graphLogicRef.current.pauseAnimation();
-      setIsPlaying(false);
-    }
+    setIsPlaying(false);
   };
   
   // Handle reset
   const handleReset = () => {
-    if (graphLogicRef.current) {
-      if (isAnimating) {
-        graphLogicRef.current.pauseAnimation();
-      }
-      graphLogicRef.current.generateRandomGraph(maxVertices);
-      setIsPlaying(false);
-      setCurrentElementIndex(-1);
-      setElementStates({});
-      setCurrentOperationState({});
+    // Call into GraphLogic's exposed reset (it sets up window.resetGraph)
+    if (typeof window !== 'undefined' && typeof window.resetGraph === 'function') {
+      window.resetGraph();
     }
+    setIsPlaying(false);
+    setCurrentElementIndex(-1);
+    setElementStates({});
+    setCurrentOperationState({});
   };
   
   // Handle resume (when play is clicked while paused)
   const handleResume = () => {
-    if (graphLogicRef.current && !isPlaying && isAnimating) {
-      graphLogicRef.current.resumeAnimation();
+    if (!isPlaying && isAnimating) {
       setIsPlaying(true);
     }
   };
@@ -290,12 +180,11 @@ const GraphVisualizerPage = () => {
           {/* Code Display */}
           <div id="graph-code-section" className="flex-1 min-h-0">
             <CodeDisplay
-              language={codeLanguage}
-              operation={getCodeTemplate().operation}
-              parameters={getCodeTemplate().parameters}
-              isAnimating={isAnimating}
-              currentStep={currentElementIndex}
-              graph={graph}
+              codeLanguage={codeLanguage}
+              operation={operation}
+              currentCodeLine={currentCodeLine}
+              animationStep={animationStep}
+              currentIteration={currentIteration}
             />
           </div>
           
@@ -381,6 +270,32 @@ const GraphVisualizerPage = () => {
           />
         </motion.div>
       )}
+
+  {/* Logic Orchestrator (headless) */}
+  <GraphOrchestrator
+        operation={operation}
+        isPlaying={isPlaying}
+        speed={speed}
+        addVertexValue={addVertexValue}
+        addEdgeFrom={addEdgeFrom}
+        addEdgeTo={addEdgeTo}
+        addEdgeWeight={addEdgeWeight}
+        searchVertex={searchVertex}
+        startVertex={startVertex}
+        graph={graph}
+        maxVertices={maxVertices}
+        setIsAnimating={setIsAnimating}
+        setIsPlaying={setIsPlaying}
+        setGraph={setGraph}
+        setCurrentElementIndex={setCurrentElementIndex}
+        setCurrentMemoryIndex={setCurrentMemoryIndex}
+        setCurrentCodeLine={setCurrentCodeLine}
+        setElementStates={setElementStates}
+        setAnimationStep={setAnimationStep}
+        setCurrentIteration={setCurrentIteration}
+        setOperationState={setCurrentOperationState}
+        onAnimationComplete={() => setIsPlaying(false)}
+      />
     </div>
   );
 };

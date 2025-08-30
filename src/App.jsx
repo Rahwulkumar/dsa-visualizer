@@ -15,6 +15,7 @@ import TreeVisualizerPage from './pages/tree/TreeVisualizerPage';
 import GraphInfoPage from './pages/graph/GraphInfoPage';
 import GraphVisualizerPage from './pages/graph/GraphVisualizerPage';
 import HashTableInfoPage from './pages/hashtable/HashTableInfoPage';
+import HashTableVisualizerPage from './pages/hashtable/HashTableVisualizerPage';
 import HeapInfoPage from './pages/heap/HeapInfoPage';
 import TrieInfoPage from './pages/trie/TrieInfoPage';
 import SortingInfoPage from './pages/sorting/SortingInfoPage';
@@ -41,6 +42,7 @@ function App() {
         <Route path="/graph-info" element={<GraphInfoPage />} />
         <Route path="/graph-visualizer" element={<GraphVisualizerPage />} />
         <Route path="/hash-table-info" element={<HashTableInfoPage />} />
+        <Route path="/hash-table-visualizer" element={<HashTableVisualizerPage />} />
         <Route path="/heap-info" element={<HeapInfoPage />} />
         <Route path="/trie-info" element={<TrieInfoPage />} />
         <Route path="/sorting-info" element={<SortingInfoPage />} />
