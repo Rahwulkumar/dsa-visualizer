@@ -18,6 +18,7 @@ import TrieInfoPage from './pages/trie/TrieInfoPage';
 import SortingInfoPage from './pages/sorting/SortingInfoPage';
 import SortingVisualizerPage from './pages/sorting/SortingVisualizerPage';
 import SearchingInfoPage from './pages/searching/SearchingInfoPage';
+import SearchingVisualizerPage from './pages/searching/SearchingVisualizerPage';
 import './styles/globals.css';
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
         <Route path="/sorting-info" element={<SortingInfoPage />} />
         <Route path="/sorting-visualizer" element={<SortingVisualizerPage />} />
         <Route path="/searching-info" element={<SearchingInfoPage />} />
+        <Route path="/searching-visualizer" element={<SearchingVisualizerPage />} />
       </Routes>
     </div>
   );

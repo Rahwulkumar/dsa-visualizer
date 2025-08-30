@@ -1,71 +1,51 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+// Backup of working SearchingLogic before binary search enhancement
+import React, { useEffect, useCallback, useRef } from 'react';
 
 const SearchingLogic = ({
+  displayArray,
+  searchTarget,
+  setSearchTarget,
   operation,
   isPlaying,
-  speed,
-  displayArray,
-  // eslint-disable-next-line no-unused-vars
-  memoryArray,
-  // eslint-disable-next-line no-unused-vars
-  codeLanguage,
-  // eslint-disable-next-line no-unused-vars
-  arraySize,
-  setIsAnimating,
   setIsPlaying,
-  // eslint-disable-next-line no-unused-vars
-  setDisplayArray,
-  // eslint-disable-next-line no-unused-vars
-  setMemoryArray,
-  // eslint-disable-next-line no-unused-vars
-  setOriginalArray,
+  isAnimating,
+  setIsAnimating,
+  speed,
   setCurrentElementIndex,
   setCurrentCodeLine,
   setCurrentMemoryIndex,
   setElementStates,
   setAnimationStep,
   setFoundIndex,
-  setHeapMemory,
-  setCurrentStackFrame,
   setCurrentIteration,
   setComparisons,
-  searchTarget,
-  setSearchTarget,
-  // eslint-disable-next-line no-unused-vars
-  searchRange,
   setSearchRange,
-  // eslint-disable-next-line no-unused-vars
-  initializeMemoryModel,
-  isAnimating
+  setCurrentStackFrame,
+  setHeapMemory
 }) => {
-  // eslint-disable-next-line no-unused-vars
-  const animationRef = useRef(null);
-  const stepRef = useRef(0);
   const stepsRef = useRef([]);
+  const stepRef = useRef(0);
 
-  // Generate search target when starting animation
+  // Generate a random search target from the array
   const generateSearchTarget = useCallback(() => {
     if (displayArray.length === 0) return null;
-    
-    // 70% chance the target exists in the array
-    const targetExists = Math.random() > 0.3;
-    let target;
-    
-    if (targetExists) {
-      target = displayArray[Math.floor(Math.random() * displayArray.length)];
+    // 70% chance to pick from array, 30% chance to pick random number not in array
+    if (Math.random() < 0.7) {
+      return displayArray[Math.floor(Math.random() * displayArray.length)];
     } else {
-      // Generate a random target that might not exist
-      target = Math.floor(Math.random() * 100);
+      // Generate a number not in the array
+      let target;
+      do {
+        target = Math.floor(Math.random() * 100) + 1;
+      } while (displayArray.includes(target));
+      return target;
     }
-    
-    return target;
   }, [displayArray]);
 
   // Linear Search Algorithm
   const generateLinearSearchSteps = useCallback((array, target) => {
     const steps = [];
     let comparisons = 0;
-    let foundIndex = -1;
 
     // Step 1: Initialize
     steps.push({
@@ -76,7 +56,6 @@ const SearchingLogic = ({
       animationStep: `Starting linear search for ${target}`,
       currentIteration: 0,
       comparisons: 0,
-      searchRange: { left: -1, right: -1, mid: -1 },
       foundIndex: -1
     });
 
@@ -129,62 +108,48 @@ const SearchingLogic = ({
       steps.push({
         type: 'comparison',
         currentCodeLine: 3,
-        animationStep: `Comparing ${array[i]} with target ${target}`,
+        animationStep: `Comparing ${array[i]} with ${target}`,
         comparisons: comparisons
       });
 
+      // Check if found
       if (array[i] === target) {
-        // Found the target
-        foundIndex = i;
         steps.push({
           type: 'found',
           currentCodeLine: 4,
           elementStates: (prev) => {
             const newStates = { ...prev };
-            // Mark all previous elements as visited
-            for (let j = 0; j < i; j++) {
-              newStates[j] = 'visited';
-            }
-            // Mark found element
             newStates[i] = 'found';
             return newStates;
           },
-          foundIndex: foundIndex,
+          foundIndex: i,
           animationStep: `Found target ${target} at index ${i}!`
         });
-        break;
-      } else {
-        // Continue searching - this element will be marked as visited in next iteration
-        steps.push({
-          type: 'continue',
-          animationStep: `${array[i]} ≠ ${target}, continue searching`
-        });
+        return steps;
       }
     }
 
-    // Final step
-    if (foundIndex === -1) {
-      steps.push({
-        type: 'not_found',
-        currentElementIndex: -1,
-        currentCodeLine: 5,
-        elementStates: (prev) => {
-          const newStates = { ...prev };
-          // Mark all elements as visited
-          for (let j = 0; j < array.length; j++) {
-            newStates[j] = 'visited';
-          }
-          return newStates;
-        },
-        animationStep: `Target ${target} not found in array`,
-        foundIndex: -1
-      });
-    }
+    // Not found
+    steps.push({
+      type: 'not_found',
+      currentElementIndex: -1,
+      currentCodeLine: 5,
+      elementStates: (prev) => {
+        const newStates = { ...prev };
+        // Mark all elements as visited
+        for (let j = 0; j < array.length; j++) {
+          newStates[j] = 'visited';
+        }
+        return newStates;
+      },
+      animationStep: `Target ${target} not found in array`,
+      foundIndex: -1
+    });
 
     return steps;
   }, []);
 
-  // Binary Search Algorithm
+  // Enhanced Binary Search Algorithm with proper visualization
   const generateBinarySearchSteps = useCallback((array, target) => {
     const steps = [];
     let comparisons = 0;
@@ -198,23 +163,23 @@ const SearchingLogic = ({
       currentElementIndex: -1,
       currentCodeLine: 0,
       elementStates: {},
-      animationStep: `Starting binary search for ${target} in sorted array`,
+      animationStep: `🎯 Starting binary search for target ${target} in sorted array`,
       currentIteration: 0,
       comparisons: 0,
-      searchRange: { left, right, mid: -1 },
+      searchRange: { left: -1, right: -1, mid: -1 },
       foundIndex: -1
     });
 
-    // Step 2: Initialize pointers - Show full array in range
+    // Step 2: Show initial array and setup
     steps.push({
-      type: 'init_pointers',
+      type: 'setup',
       currentCodeLine: 1,
-      animationStep: `Initialize search boundaries: left = ${left}, right = ${right} (entire array)`,
+      animationStep: `📋 Array: [${array.join(', ')}] - Setting up search boundaries`,
       searchRange: { left, right, mid: -1 },
       elementStates: () => {
         const newStates = {};
         for (let i = 0; i < array.length; i++) {
-          newStates[i] = 'inRange'; // All elements are initially in range
+          newStates[i] = 'inRange'; // All elements are initially in search range
         }
         return newStates;
       },
@@ -229,50 +194,56 @@ const SearchingLogic = ({
       }
     });
 
+    // Step 3: Show initial boundaries
+    steps.push({
+      type: 'show_boundaries',
+      currentCodeLine: 1,
+      animationStep: `🔍 Initial boundaries: left = ${left}, right = ${right} (searching entire array)`,
+      searchRange: { left, right, mid: -1 },
+      elementStates: (prev) => {
+        const newStates = { ...prev };
+        // Highlight the boundaries
+        newStates[left] = 'inRange';
+        newStates[right] = 'inRange';
+        return newStates;
+      }
+    });
+
     let iteration = 0;
     while (left <= right) {
       iteration++;
-      const mid = Math.floor((left + right) / 2);
-
-      // Show current search space
+      
+      // Step 4: Show while condition check
       steps.push({
-        type: 'show_search_space',
+        type: 'while_check',
         currentCodeLine: 2,
-        animationStep: `Iteration ${iteration}: Current search space is from index ${left} to ${right}`,
-        searchRange: { left, right, mid: -1 },
+        animationStep: `🔄 Iteration ${iteration}: Check if left (${left}) <= right (${right}) → ${left <= right ? 'Continue' : 'Stop'}`,
         currentIteration: iteration,
-        elementStates: () => {
-          const newStates = {};
-          for (let i = 0; i < array.length; i++) {
-            if (i < left || i > right) {
-              newStates[i] = 'excluded'; // Outside search range
-            } else {
-              newStates[i] = 'inRange'; // In current search range
-            }
-          }
-          return newStates;
-        }
+        searchRange: { left, right, mid: -1 }
       });
 
-      // Calculate mid step with emphasis
+      const mid = Math.floor((left + right) / 2);
+
+      // Step 5: Calculate and highlight mid
       steps.push({
         type: 'calculate_mid',
         currentCodeLine: 3,
         currentElementIndex: mid,
-        elementStates: () => {
-          const newStates = {};
+        elementStates: (prev) => {
+          const newStates = { ...prev };
+          // Clear previous states and set new ones
           for (let i = 0; i < array.length; i++) {
             if (i < left || i > right) {
-              newStates[i] = 'excluded'; // Outside search range
+              newStates[i] = 'excluded'; // Outside current search range
             } else if (i === mid) {
-              newStates[i] = 'comparing'; // Current mid element
+              newStates[i] = 'comparing'; // Mid element being calculated
             } else {
               newStates[i] = 'inRange'; // In current search range
             }
           }
           return newStates;
         },
-        animationStep: `Calculate middle index: mid = floor((${left} + ${right}) / 2) = ${mid}`,
+        animationStep: `📐 Calculate mid: (${left} + ${right}) ÷ 2 = ${mid} → Checking arr[${mid}] = ${array[mid]}`,
         currentIteration: iteration,
         searchRange: { left, right, mid },
         currentStackFrame: {
@@ -287,14 +258,44 @@ const SearchingLogic = ({
         }
       });
 
-      // Compare with target
+      // Step 6: Highlight the array division
+      steps.push({
+        type: 'show_division',
+        currentCodeLine: 3,
+        currentElementIndex: mid,
+        elementStates: (prev) => {
+          const newStates = { ...prev };
+          for (let i = 0; i < array.length; i++) {
+            if (i < left || i > right) {
+              newStates[i] = 'excluded';
+            } else if (i === mid) {
+              newStates[i] = 'comparing'; // Mid element highlighted
+            } else if (i >= left && i < mid) {
+              newStates[i] = 'inRange'; // Left half
+            } else if (i > mid && i <= right) {
+              newStates[i] = 'inRange'; // Right half  
+            }
+          }
+          return newStates;
+        },
+        animationStep: `✂️ Array split: Left[${left}..${mid-1}] | Mid[${mid}] | Right[${mid+1}..${right}]`,
+        searchRange: { left, right, mid }
+      });
+
+      // Step 7: Compare with target
       comparisons++;
       steps.push({
         type: 'comparison',
         currentCodeLine: 4,
-        animationStep: `Compare arr[${mid}] = ${array[mid]} with target ${target}`,
+        currentElementIndex: mid,
+        elementStates: (prev) => {
+          const newStates = { ...prev };
+          newStates[mid] = 'comparing';
+          return newStates;
+        },
+        animationStep: `🔍 Compare: arr[${mid}] = ${array[mid]} vs target = ${target}`,
         comparisons: comparisons,
-        currentElementIndex: mid
+        searchRange: { left, right, mid }
       });
 
       if (array[mid] === target) {
@@ -303,25 +304,27 @@ const SearchingLogic = ({
         steps.push({
           type: 'found',
           currentCodeLine: 5,
+          currentElementIndex: mid,
           elementStates: (prev) => {
             const newStates = { ...prev };
             newStates[mid] = 'found';
             return newStates;
           },
           foundIndex: foundIndex,
-          animationStep: `🎉 Target ${target} found at index ${mid}! Search complete.`,
+          animationStep: `🎉 SUCCESS! Found target ${target} at index ${mid}`,
           searchRange: { left, right, mid }
         });
         break;
       } else if (array[mid] < target) {
-        // Target is in right half - show elimination
+        // Search right half
         steps.push({
-          type: 'eliminate_left',
+          type: 'decision_right',
           currentCodeLine: 6,
-          animationStep: `${array[mid]} < ${target}: Target must be in RIGHT half. Eliminating left half [${left}...${mid}]`,
+          currentElementIndex: mid,
+          animationStep: `📊 ${array[mid]} < ${target} → Target is larger, search RIGHT half`,
           elementStates: (prev) => {
             const newStates = { ...prev };
-            // Mark left half including mid as excluded
+            // Mark left half and mid as excluded
             for (let i = left; i <= mid; i++) {
               newStates[i] = 'excluded';
             }
@@ -331,7 +334,7 @@ const SearchingLogic = ({
             }
             return newStates;
           },
-          searchRange: { left, right: right, mid }
+          searchRange: { left, right, mid }
         });
         
         left = mid + 1;
@@ -339,11 +342,11 @@ const SearchingLogic = ({
         steps.push({
           type: 'update_left',
           currentCodeLine: 7,
-          animationStep: `Update left boundary: left = mid + 1 = ${left}. New search range: [${left}...${right}]`,
+          animationStep: `➡️ Update boundaries: left = ${left}, right = ${right} (eliminated left half)`,
           searchRange: { left, right, mid: -1 },
           elementStates: (prev) => {
             const newStates = { ...prev };
-            // Update range visualization
+            // Update visualization for new range
             for (let i = 0; i < array.length; i++) {
               if (i < left || i > right) {
                 newStates[i] = 'excluded';
@@ -364,24 +367,25 @@ const SearchingLogic = ({
           }
         });
       } else {
-        // Target is in left half - show elimination
+        // Search left half
         steps.push({
-          type: 'eliminate_right',
+          type: 'decision_left',
           currentCodeLine: 8,
-          animationStep: `${array[mid]} > ${target}: Target must be in LEFT half. Eliminating right half [${mid}...${right}]`,
+          currentElementIndex: mid,
+          animationStep: `📊 ${array[mid]} > ${target} → Target is smaller, search LEFT half`,
           elementStates: (prev) => {
             const newStates = { ...prev };
-            // Mark right half including mid as excluded
+            // Mark right half and mid as excluded
             for (let i = mid; i <= right; i++) {
               newStates[i] = 'excluded';
             }
             // Keep left half in range
-            for (let i = left; i <= mid - 1; i++) {
+            for (let i = left; i < mid; i++) {
               newStates[i] = 'inRange';
             }
             return newStates;
           },
-          searchRange: { left: left, right, mid }
+          searchRange: { left, right, mid }
         });
         
         right = mid - 1;
@@ -389,11 +393,11 @@ const SearchingLogic = ({
         steps.push({
           type: 'update_right',
           currentCodeLine: 9,
-          animationStep: `Update right boundary: right = mid - 1 = ${right}. New search range: [${left}...${right}]`,
+          animationStep: `⬅️ Update boundaries: left = ${left}, right = ${right} (eliminated right half)`,
           searchRange: { left, right, mid: -1 },
           elementStates: (prev) => {
             const newStates = { ...prev };
-            // Update range visualization
+            // Update visualization for new range
             for (let i = 0; i < array.length; i++) {
               if (i < left || i > right) {
                 newStates[i] = 'excluded';
@@ -416,20 +420,20 @@ const SearchingLogic = ({
       }
     }
 
-    // Final step - target not found
+    // If not found
     if (foundIndex === -1) {
       steps.push({
         type: 'not_found',
-        currentElementIndex: -1,
         currentCodeLine: 10,
-        elementStates: () => {
-          const newStates = {};
+        elementStates: (prev) => {
+          const newStates = { ...prev };
+          // Mark all elements as excluded
           for (let i = 0; i < array.length; i++) {
-            newStates[i] = 'excluded'; // All elements are now excluded
+            newStates[i] = 'excluded';
           }
           return newStates;
         },
-        animationStep: `❌ Target ${target} not found in array (search space exhausted)`,
+        animationStep: `❌ Search exhausted! Target ${target} not found in array`,
         foundIndex: -1,
         searchRange: { left: -1, right: -1, mid: -1 }
       });

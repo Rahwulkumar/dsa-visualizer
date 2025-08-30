@@ -1,4 +1,5 @@
 import React from 'react';
+// eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Search, Clock, Code, Layers, MemoryStick } from 'lucide-react';
@@ -21,26 +22,6 @@ const SearchingInfoPage = () => {
       operation: "Binary Search",
       complexity: "O(log n)",
       explanation: "Divide sorted array in half repeatedly. Very efficient but requires sorted data."
-    },
-    {
-      operation: "Jump Search",
-      complexity: "O(√n)",
-      explanation: "Jump ahead by fixed steps then linear search. Better than linear, worse than binary."
-    },
-    {
-      operation: "Interpolation Search",
-      complexity: "O(log log n) avg, O(n) worst",
-      explanation: "Estimate position based on value distribution. Very fast for uniformly distributed data."
-    },
-    {
-      operation: "Exponential Search",
-      complexity: "O(log n)",
-      explanation: "Find range then binary search. Good for unbounded arrays or when target is near beginning."
-    },
-    {
-      operation: "Ternary Search",
-      complexity: "O(log₃ n)",
-      explanation: "Divide array into three parts. Similar to binary search but with more comparisons."
     }
   ];
 
